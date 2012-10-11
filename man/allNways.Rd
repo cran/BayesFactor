@@ -9,7 +9,7 @@ Function to compute the Bayes factors in an ANOVA design
 This function computes Bayes factors for all main-effects and interaction contrasts in an ANOVA design. 
 }
 \usage{
-allNways(y, dataFixed = NULL, dataRandom = NULL, iterations = 10000, only.top = TRUE, progress = FALSE, rscaleFixed = .5, rscaleRandom = 1, logbf = FALSE, ...) 
+allNways(y, dataFixed = NULL, dataRandom = NULL, iterations = 10000, only.top = TRUE, progress = TRUE, rscaleFixed = .5, rscaleRandom = 1, logbf = FALSE, multicore = FALSE, ...) 
     
 }
 
@@ -19,10 +19,10 @@ allNways(y, dataFixed = NULL, dataRandom = NULL, iterations = 10000, only.top = 
 	A vector of observations	
 }
   \item{dataFixed}{
-A data frame containing the fixed factors, one column per factor. Columns must be factors
+A data frame containing the fixed factors, one column per factor. Columns will be converted to factors if they are not factors already.
 }
   \item{dataRandom}{
-A data frame containing the random factors, one column per factor. Columns must be factors
+A data frame containing the random factors, one column per factor. Columns will be converted to factors if they are not factors already.
 }
   \item{iterations}{
 Number of Monte Carlo samples to perform (see details).  
@@ -31,19 +31,21 @@ Number of Monte Carlo samples to perform (see details).
 If \code{FALSE}, then all nested submodels will be compared.  If \code{TRUE}, then only the first level of a top-down strategy of comparing submodels missing a single covariate is implemented.  \code{TRUE} is the default because the comparisons are analogous to classical ANOVA, and this option dramatically cuts down the computation time (see details).
 }
 \item{progress}{
-If \code{TRUE}, a text progress bar is displayed for each model analyzed. 
+If \code{TRUE}, a text progress bar is displayed. Currently unavailable if \code{multicore=TRUE}.
 }
 \item{rscaleFixed}{The prior scale of effect size for factors that are treated as a fixed.
 }
 \item{rscaleRandom}{
 The prior scale of effect size for factors that are treated as random.}
 
-
-
-
 \item{logbf}{
 If \code{TRUE}, return the natural logarithm of the Bayes factor
 }
+\item{multicore}{
+If \code{TRUE}, and the \code{\link[doMC:doMC-package]{doMC}} 
+ package is installed, the function will attempt to use multiple cores. Number of cores is set by options(cores).
+}
+
 \item{...}{
 Additional arguments to pass to \code{\link{nWayAOV.MC}}
 }
@@ -93,7 +95,7 @@ It is possible to reduce the number of models tested by only testing the most co
 
 }
 \seealso{
-\code{\link{nWayAOV.MC}}, \code{\link{aov}}, \code{\link{ttest.Quad}}, \code{\link{oneWayAOV.Quad}},\code{\link{oneWayAOV.Gibbs}}
+\code{\link{nWayAOV.MC}}, \code{\link{aov}}, \code{\link{ttest.Quad}}, \code{\link{oneWayAOV.Quad}},\code{\link{oneWayAOV.Gibbs}}, \code{\link[doMC:doMC-package]{doMC}}, \code{\link{options}}
 }
 \examples{
 ## Classical example, taken from t.test() example
@@ -108,7 +110,7 @@ summary(aov(extra ~ group + Error(ID/group), data = sleep))
 ## in favor of the alternative hypothesis
 allNways(y = sleep$extra,
       dataFixed = data.frame(sleep$group), 	   
-      dataRandom = data.frame(sleep$ID))
+      dataRandom = data.frame(sleep$ID), progress=FALSE)
 
 
 }

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-if test -e ".svn" ; then 
-  svnversion -n > inst/SVN_VERSION 
-fi 
