@@ -1,0 +1,13 @@
+useDynLib(BayesFactor)
+
+export( ttest.Gibbs,
+		ttest.Quad,
+		oneWayAOV.Gibbs,  
+		oneWayAOV.Quad, 
+		linearReg.Quad, 
+		nWayAOV.MC,
+		nWayAOV.Gibbs, 
+		allNways, 
+		logMeanExpLogs, 
+		logCumMeanExpLogs,
+    BFInfo)
