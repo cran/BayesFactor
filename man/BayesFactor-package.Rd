@@ -7,14 +7,14 @@ Functions to compute Bayes factor hypothesis tests for common research designs a
 }
 \description{
 This package contains function to compute Bayes factors for a number of research designs and hypotheses, including
-t tests, ANOVA, and linear regression. 
+t tests, ANOVA, and linear regression. It also contains an experimental user interface.
 }
 \details{
 \tabular{ll}{
 Package: \tab BayesFactor\cr
 Type: \tab Package\cr
-Version: \tab 0.8.3\cr
-Date: \tab 2012-10-11\cr
+Version: \tab 0.8.5\cr
+Date: \tab 2012-10-30\cr
 License: \tab GPL 2.0\cr
 LazyLoad: \tab yes\cr
 }
@@ -27,6 +27,8 @@ t test: \code{\link{ttest.Quad}}, \code{\link{ttest.Gibbs}}
 One-way ANOVA: \code{\link{oneWayAOV.Quad}}, \code{\link{oneWayAOV.Gibbs}}
 
 General ANOVA: \code{\link{nWayAOV.MC}}, \code{\link{nWayAOV.Gibbs}}, \code{\link{allNways}}
+
+Bayes factors for ANOVA designs can be analyzed using the (highly) experimental interface, \code{\link{aovGUI}}. 
 
 }
 \author{

@@ -10,4 +10,9 @@ export( ttest.Gibbs,
 		allNways, 
 		logMeanExpLogs, 
 		logCumMeanExpLogs,
-    BFInfo)
+    BFInfo,
+    aovGUI,
+    nWayAOV2)
+
+import(mvtnorm,reshape, Rook, RJSONIO, pbapply, Rserve)
+
