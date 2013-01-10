@@ -2,6 +2,101 @@ if(getRversion() >= '2.15.1') globalVariables("gIndex")
 
 mcoptions <- list(preschedule=FALSE, set.seed=TRUE)
 
+alphabetizeTerms <- function(trms){
+  splt = strsplit(trms,":",fixed=TRUE)
+  sorted=lapply(splt, function(trm){
+    if(length(trm)==1) return(trm)
+    trm = sort(trm)
+    paste(trm,collapse=":")
+  })
+  sorted = unlist(sorted)
+  
+  return(sorted)
+}
+
+whichOmitted <- function(numerator, full){
+  fullFmla <- formula(full@identifier$formula)
+  numFmla <- formula(numerator@identifier$formula)
+
+  fullTrms <- attr(terms(fullFmla), "term.labels")
+  numTrms <- attr(terms(numFmla), "term.labels")
+  
+  fullTrms = alphabetizeTerms(fullTrms)
+  numTrms = alphabetizeTerms(numTrms)
+  
+  omitted = fullTrms[!(fullTrms %in% numTrms)]
+  if(any( !(numTrms %in% fullTrms) )) stop("Numerator not a proper restriction of full.")
+  return(omitted)
+}
+
+
+propErrorEst = function(logX){
+  n = length(logX)
+  logSumX = logMeanExpLogs(logX) + log(n)
+  logSumX2 = logMeanExpLogs(2*logX) + log(n)
+  sqrt((exp(logSumX2 - 2*logSumX) - 1/n) * (n/(n-1)))
+}
+
+combn2 <- function(x,lower=1){
+  unlist(lapply(lower:length(x),function(m,x) combn(x,m,simplify=FALSE),x=x),recursive=FALSE)
+}
+
+stringFromFormula <- function(formula){
+  oneLine = paste(deparse(formula),collapse="")
+  sub("\\s\\s+"," ", oneLine, perl=TRUE) # get rid of extra spaces
+}
+
+fmlaFactors <- function(formula, data){
+  rownames(attr(terms(formula, data = data),"factors"))
+}
+
+are.factors<-function(df) sapply(df, function(v) is.factor(v))
+
+`%com%` <- function(x,y){
+  common = intersect(names(x),names(y))
+  if(length(common)==0) return(logical(0))
+  all(sapply(common, function(el,x,y) identical(x[el],y[el]), x=x,y=y))
+}
+
+randomString <- function(x=1){
+  n = ifelse(length(x)>1, length(x), x)
+  substring(tempfile(rep("",n),"",""),2)
+}
+
+rpriorValues <- function(modelType,effectType=NULL,priorType=NULL){
+  if(length(priorType)>1 | is.numeric(priorType)){
+    return(priorType)
+  }else if(length(priorType)==0){
+    return(NULL)
+  }
+  
+  if(modelType=="allNways"){
+    return(
+      switch(effectType,
+             fixed = switch(priorType, 
+                            wide=sqrt(2)/2, 
+                            medium=1/2, 
+                            stop("Unknown prior type.")),
+             random = 1,
+             stop("Unknown prior type.")
+      )
+    )
+  }
+  
+  if(modelType=="ttest"){
+    return(
+      switch(priorType, wide=1, medium=sqrt(2)/2, stop("Unknown prior type."))  
+    )
+  }
+  
+  if(modelType=="regression"){
+    return(1)  
+  }
+  
+  stop("Unknown prior type.")
+}
+
+
 dinvgamma = function (x, shape, scale = 1) 
 {
     if (shape <= 0 | scale <= 0) {

@@ -1,100 +1,88 @@
-\name{nWayAOV.MC}
-\alias{nWayAOV.MC}
+\name{nWayAOV}
 \alias{nWayAOV}
-\alias{nWayAOV.Gibbs}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-Functions to compute Bayes factors for a specified ANOVA model defined by a design matrix.
+\title{Use ANOVA design matrix to compute Bayes factors or sample posterior}
+\usage{
+  nWayAOV(y, X, struc = NULL, gMap = NULL, rscale,
+    iterations = 10000, progress = TRUE, gibi = NULL,
+    gibbs = FALSE)
+}
+\arguments{
+  \item{y}{vector of observations}
+
+  \item{X}{design matrix whose number of rows match
+  \code{length(y)}.}
+
+  \item{struc}{vector grouping the columns of \code{X} (see
+  Details).}
+
+  \item{gMap}{alternative way of grouping the columns of
+  \code{X}}
+
+  \item{rscale}{a vector of prior scale(s) of appropriate
+  length (see Details).}
+
+  \item{iterations}{Number of Monte Carlo samples used to
+  estimate Bayes factor or posterior}
+
+  \item{progress}{if \code{TRUE}, show progress with a text
+  progress bar}
+
+  \item{gibi}{interface for a future graphical user
+  interface (not intended for use by end users)}
+
+  \item{gibbs}{if \code{TRUE}, return samples from the
+  posterior instead of a Bayes factor}
+}
+\value{
+  If \code{posterior} is \code{FALSE}, a vector of length 2
+  containing the computed log(e) Bayes factor (against the
+  intercept-only null), along with a proportional error
+  estimate on the Bayes factor. Otherwise, an object of
+  class \code{mcmc}, containing MCMC samples from the
+  posterior is returned.
 }
 \description{
-These functions computes a single Bayes factor, or estimate parameters, for a specified ANOVA model to a null ANOVA model defined by the addition of a grand mean and error terms.}
-\usage{
-    
-nWayAOV.MC(y, X, struc, iterations = 10000, rscale = 1, progress = FALSE, 
-    samples = FALSE, gsamples = FALSE, gibi = NULL, logbf = FALSE)
-    
-nWayAOV.Gibbs(y, X, struc, iterations = 10000, rscale = 1, progress = TRUE)
-}
-
-%- maybe also 'usage' for other objects documented here.
-\arguments{
-\item{y}{
-	A vector of observations	
-}
-\item{X}{
-A design matrix whose number of rows match \code{length(y)}.
-}
-
-\item{struc}{
-Vector grouping the columns of \code{X} (see details).
-}
-
-\item{iterations}{
-Number of Monte Carlo samples used to estimate Bayes factor.
-}
-
-\item{rscale}{
-A scalar or a vector (same length as \code{struc}) of prior scale(s) (see details).
-}
-
-\item{progress}{
-If \code{TRUE}, text progress bar is displayed
-}
-
-  \item{samples}{
-If \code{TRUE}, return the Monte Carlo samples used in estimating the integral (default is \code{FALSE})
-}
- 
-
-\item{gsamples}{
-If \code{TRUE}, return all the Monte Carlo samples of the \code{g} parameter drawn (default is \code{FALSE}; see details)
-}
-\item{gibi}{
-Interface for a future graphical user interface (not intended for use by end users)
-}
-\item{logbf}{
-If \code{TRUE}, return the natural logarithm of the Bayes factor
-}
-
+  Computes a single Bayes factor, or samples from the
+  posterior, for an ANOVA model defined by a design matrix
 }
 \details{
-The models, priors, and methods of computation are provided in Rouder et al. (2012).  	
-The linear model for a vector of \eqn{N} observations, denoted by \eqn{y}, is 
-\deqn{ y = \mu + X \theta +\epsilon,}
-where \eqn{\theta} is a vector of \eqn{p} effects, \eqn{X} is an \eqn{N}-by-\eqn{p} design matrix, and \eqn{\epsilon} is a vector of \eqn{N} zero-centered noise terms with variance \eqn{\sigma^2}.    Zellner and Siow (1980) inspired g-priors are placed on effects, but with a possibly separate g-prior parameter for each effect:
-\deqn{\theta~N(0,\sigma^2G),} 
-where \eqn{G} is a \eqn{p}-by-\eqn{p} diagonal matrix.  
+  This function is not meant to be called by end-users,
+  although technically-minded users can call this function
+  for flexibility beyond what the other functions in this
+  package provide. See \code{\link{lmBF}} for a
+  user-friendly front-end to this function. Details about
+  the priors can be found in the help for
+  \code{\link{anovaBF}} and the references therein.
 
-Following Gelman (2005), effects may grouped into blocks where effects within a single block are exchangable and those across blocks are not.  These blocks correspond to the main effect of a factor or the interaction between factors.  Blocking is implemented by placing constraints on diag(G) as follows.  Consider a design with two factors each with two levels.  There are eight effects (2 main effects for the two levels and 4 interaction effects) which should be grouped into three blocks (one for each main effect, and one for the interaction).  Exchangability within blocks but not across it is given by \eqn{diag(G)=(g_1, g_1, g_2, g_2, g_3, g_3, g_3, g_3, g_3)} where the first two elements are for one main effect, the next two are for the other, and the last four are for the interaction (assuming this order is coded in the design matrix \eqn{X}).  \code{struct} codes how the diagonal of \eqn{G} should be grouped, with each entry indicating how many levels are in a block. Note \code{sum(struct)} must equal the number of non-constant columns of \code{X}.  
+  Arguments \code{struc} and \code{gMap} provide a way of
+  grouping columns of the design matrix as a factor; the
+  effects in each group will share a common \eqn{g}
+  parameter. Only one of these arguments is needed; if both
+  are given, \code{gMap} takes precedence.
 
-A Jeffreys prior is placed on \eqn{\mu} and \eqn{\sigma^2}.  Independent scaled inverse-chi-square priors with one degree of freedom are placed on \eqn{g_1,\ldots,g_r}, where \eqn{r} is the number of blocks.  The square-root of the scale for \eqn{g}'s is given in \code{rscale}.
+  \code{gMap} should be a vector of the same length as the
+  number of nonconstant rows in \code{X}. It will contain
+  all integers from 0 to \eqn{N_g-1}{Ng-1}, where
+  \eqn{N_g}{Ng} is the total number of \eqn{g} parameters.
+  Each element of \code{gMap} specifies the group to which
+  that column belongs.
 
-The null model is given by \deqn{y_i = \mu + \epsilon_i} for \eqn{i=1,...,N}.
+  If all columns belonging to a group are adjacent,
+  \code{struc} can instead be used to compactly represent
+  the groupings. \code{struc} is a vector of length
+  \eqn{N_g}{Ng}. Each element specifies the number columns
+  in the group. \code{gMap} is thus the
+  \code{\link{inverse.rle}} of \code{struc}, minus 1.
 
-\code{nWayAOV.Gibbs} returns posterior samples of the parameters, which are computed using Markov-chain Monte Carlo sampling.  
-}
+  The vector \code{rscale} should be of length
+  \eqn{N_g}{Ng}, and contain the prior scales of the
+  standardized effects. See Rouder et al. (2012) for more
+  details and the help for \code{\link{anovaBF}} for some
+  typical values.
 
-\value{
-With default settings, the Bayes factor for the model relative to the null is returned.  If either \code{samples} or \code{gsamples} are \code{TRUE}, then a list whose first element is as above, and the subsequent elements contain a vector containing the samples.
-}
-
-\references{
-Gelman, A. (2005) Analysis of Variance---why it is more important than ever.  Annals of Statistics, 33, pp. 1-53. 	
-	
-Rouder, J. N., Morey, R. D., Speckman, P. L., Province, J. M., (2012) Default Bayes Factors for ANOVA Designs. Journal of Mathematical Psychology.  56.  p. 356-374.
-
-Zellner, A. and Siow, A., (1980) Posterior Odds Ratios for Selected Regression Hypotheses.  In Bayesian Statistics: Proceedings of the First Interanational Meeting held in Valencia (Spain).  Bernardo, J. M., Lindley, D. V., and Smith A. F. M. (eds), pp. 585-603.  University of Valencia.
-}
-\author{
-Richard D. Morey, Jeffrey N. Rouder
-}
-\note{\code{allNways} is a front-end function for computing multiple Bayes factors in ANOVA designs.  For each submodel, \code{allNways} constructs objects \code{X}, \code{struct}, and \code{rscale} and calls \code{nWayAOV.MC}.}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-\code{\link{allNways}}, 	
-\code{\link{aov}}, \code{\link{ttest.Quad}}, \code{\link{oneWayAOV.Quad}},\code{\link{oneWayAOV.Gibbs}}
+  The Bayes factor is estimated using Monte Carlo
+  integration, and the posterior is sampled with a Gibbs
+  sampler.
 }
 \examples{
 ## Classical example, taken from t.test() example
@@ -108,36 +96,31 @@ summary(aov(extra ~ group + Error(ID/group), data = sleep))
 ## Build design matrix
 group.column <- rep(1/c(-sqrt(2),sqrt(2)),each=10)
 subject.matrix <- model.matrix(~sleep$ID - 1,data=sleep$ID)
-X <- cbind(1, group.column, subject.matrix)
+## Note that we include no constant column
+X <- cbind(group.column, subject.matrix)
 
-## Bayes factor of full model against grand-mean only model
-bf.full <- nWayAOV.MC(y = sleep$extra, X = X, struc = c(1,10), rscale=c(.5,1))
+## (log) Bayes factor of full model against grand-mean only model
+bf.full <- nWayAOV(y = sleep$extra, X = X, struc = c(1,10), rscale=c(.5,1))
+exp(bf.full['bf'])
 
-## Build new design matrix so that we can interpret 
-## first beta as difference between means
-group.column <- rep(1/c(-2,2),each=10)
-subject.matrix <- model.matrix(~sleep$ID - 1,data=sleep$ID)
-X <- cbind(1, group.column, subject.matrix)
-
-## Sample from posterior distribution of full model
-## And plot estimated effect of drug
-samples.full <- nWayAOV.Gibbs(y = sleep$extra, X = X, struc = c(1,10), rscale = c(0.5,1), progress = FALSE)
-plot(samples.full[,2])
-
-## Remove subject effect
-X <- cbind(1, subject.matrix)
-## Bayes factor of subject-only model against grand-mean only model
-bf.reduced <- nWayAOV.MC(y = sleep$extra, X = X, struc = 10, rscale=1)
-
-## Bayes factor test of drug effect
-bf.full / bf.reduced
-
-## Compare with allNways result (should be about the same)
-allNways(y = sleep$extra,
-      dataFixed = data.frame(sleep$group), 	   
-      dataRandom = data.frame(sleep$ID), progress=FALSE)
-
+## Compare with lmBF result (should be about the same, give or take 1\%)
+bf.full2 <- lmBF(extra ~ group + ID, data = sleep, whichRandom = "ID")
+bf.full2
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
+\author{
+  Richard D. Morey (\email{richarddmorey@gmail.com}),
+  Jeffery N.  Rouder (\email{rouderj@missouri.edu})
+}
+\references{
+  Rouder, J. N., Morey, R. D., Speckman, P. L., Province,
+  J. M., (2012) Default Bayes Factors for ANOVA Designs.
+  Journal of Mathematical Psychology.  56.  p. 356-374.
+}
+\seealso{
+  See \code{\link{lmBF}} for the user-friendly front end to
+  this function; see \code{\link{regressionBF}} and
+  \code{anovaBF} for testing many regression or ANOVA
+  models simultaneously.
+}
 \keyword{htest}
+
