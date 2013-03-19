@@ -19,7 +19,8 @@
 #' 
 #' This function creates a barplot of the (log) Bayes factors in a Bayes factor 
 #' object. Error bars are added (though in many cases they may be too small to
-#' see) in red to show the error in estimation of the Bayes factor.
+#' see) in red to show the error in estimation of the Bayes factor. If a red question mark 
+#' appears next to a bar, then that Bayes factor has no error estimate available.
 #' @title Plot a Bayes factor object
 #' @param x a BFBayesFactor object
 #' @param include1 if \code{TRUE}, ensure that Bayes factor = 1 is on the plot
@@ -61,6 +62,8 @@ plot.BFBayesFactor <- function(x, include1=TRUE, addDenom = FALSE, sortbf=TRUE, 
   leftMargin = marginExpand * maxChar + 4
   
   # Errors
+  whichNA = is.na(bfs$error)
+  bfs$error[whichNA] = 0
   errs <- exp(bfs$bf + log(bfs$error))
   errs <- log(outer(errs,c(-1,1),'*') + exp(bfs$bf))/log(logBase)
   
@@ -82,7 +85,7 @@ plot.BFBayesFactor <- function(x, include1=TRUE, addDenom = FALSE, sortbf=TRUE, 
 
 
   cols = c("wheat","lightslateblue")[(bfs$bf>0) + 1]
-  pars = c(pars, list(mar=c(4,leftMargin,4,1),las=1))
+  pars = c(pars, list(oma=c(5,leftMargin,0,1),las=1,mar=c(0,0,2,0)))
   par(pars)
   yloc <- barplot( bfs$bf/log(logBase), 
            names.arg=rownames(bfs), 
@@ -93,6 +96,12 @@ plot.BFBayesFactor <- function(x, include1=TRUE, addDenom = FALSE, sortbf=TRUE, 
 
   # add error bars
   segments(errs[,1],yloc,errs[,2],yloc,col="red")
+  
+  # add unknown errors
+  if(any(whichNA)) 
+    mapply(function(x,y,adj)
+      text(x,y,"?",col="red",adj=adj)
+           , x=errs[whichNA,1],y=yloc[whichNA],adj=1-(errs[whichNA,1]>0))
   
   axis(1, at = yaxes, labels=tickLab, las=2)
   if(length(ygrids) < 50) abline(v=ygrids,col="gray",lty=2)

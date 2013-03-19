@@ -4,7 +4,7 @@
 \usage{
   nWayAOV(y, X, struc = NULL, gMap = NULL, rscale,
     iterations = 10000, progress = TRUE, gibi = NULL,
-    gibbs = FALSE, method = "simple")
+    gibbs = FALSE, method = "auto", continuous = FALSE)
 }
 \arguments{
   \item{y}{vector of observations}
@@ -35,7 +35,12 @@
 
   \item{method}{the integration method (only valid if
   \code{gibbs=TRUE}); one of "simple", "importance",
-  "laplace"}
+  "laplace", or "auto"}
+
+  \item{continuous}{either FALSE is no continuous
+  covariates are included, or a logical vector of length
+  equal to number of columns of X indicating which columns
+  of the design matrix represent continuous covariates}
 }
 \value{
   If \code{posterior} is \code{FALSE}, a vector of length 2
@@ -93,8 +98,14 @@
   log(g). "laplace" does not sample, but uses a Laplace
   approximation to the integral. It is expected to be more
   accurate for large sample sizes, where MC sampling is
-  slow. integration, and the posterior is sampled with a
-  Gibbs sampler.
+  slow. If \code{method="auto"}, then an initial run with
+  both samplers is done, and the sampling method that
+  yields the least-variable samples is chosen. The number
+  of initial test iterations is determined by
+  \code{options(BFpretestIterations)}.
+
+  If posterior samples are requested, the posterior is
+  sampled with a Gibbs sampler.
 }
 \examples{
 ## Classical example, taken from t.test() example

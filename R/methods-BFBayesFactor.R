@@ -114,18 +114,28 @@ setMethod('/', signature("BFBayesFactor", "BFBayesFactor"), function(e1, e2){
 
 setMethod('show', "BFBayesFactor", function(object){
   cat("Bayes factor analysis\n--------------\n")
-  bfs = extractBF(object, logbf=FALSE)
+  bfs = extractBF(object, logbf=TRUE)
+  bfs$bf = sapply(bfs$bf, expString)
   indices = paste("[",1:nrow(bfs),"]",sep="")
+  
+  # pad model names
   nms = paste(indices,rownames(bfs),sep=" ")
   maxwidth = max(nchar(nms))
   nms = str_pad(nms,maxwidth,side="right",pad=" ")
+
+  # pad Bayes factors
+  maxwidth = max(nchar(bfs$bf))
+  bfString = str_pad(bfs$bf,maxwidth,side="right",pad=" ")
+  
+  
   for(i in 1:nrow(bfs)){
-    cat(nms[i]," : ",bfs$bf[i]," (",round(bfs$error[i]*100,2),"%)\n",sep="")
+    cat(nms[i]," : ",bfString[i]," \u00B1",round(bfs$error[i]*100,2),"%\n",sep="")
   }
-  cat("---\n Denominator:\n")
-  cat("Type: ",class(object@denominator)[1],", ",object@denominator@type,"\n",sep="")
-  cat(object@denominator@longName,"\n\n")
-  })
+  cat("\nAgainst denominator:\n")
+  cat(" ",object@denominator@longName,"\n")
+  cat("---\nBayes factor type: ",class(object@denominator)[1],", ",object@denominator@type,"\n\n",sep="")
+  
+})
 
 setMethod('summary', "BFBayesFactor", function(object){
     show(object)

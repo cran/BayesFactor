@@ -10,7 +10,7 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
     rscaleFixed = rpriorValues("allNways","fixed",numerator@prior$rscale[['fixed']])
     rscaleRandom = rpriorValues("allNways","random",numerator@prior$rscale[['random']])
     rscaleCont = rpriorValues("regression",,numerator@prior$rscale[['continuous']])
-                        
+    
     formula = formula(numerator@identifier$formula)
     checkFormula(formula, data, analysis = "lm")
             
@@ -67,7 +67,12 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
       }
     }else{
       # GLM
-      stop("GLM not implemented.")
+      bf = nWayFormula(formula=formula, data = data, 
+                       dataTypes = dataTypes,
+                       rscaleFixed = rscaleFixed,
+                       rscaleRandom = rscaleRandom,
+                       rscaleCont = rscaleCont,
+                       gibbs = FALSE, ...)        
     }
             
           
@@ -90,3 +95,5 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
              
     }
 )
+
+

@@ -1,3 +1,58 @@
+
+doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, XtCy, ytCy, N, P, nGs, gMap, a, b, incCont, progress, pbFun)
+{
+  simpSamples = NULL
+  impSamples = NULL
+  apx = NULL
+  optMethod = options()$BFapproxOptimizer
+  testNsamples = options()$BFpretestIterations
+  
+  if(method=="auto"){
+    simpSamples = .Call("RjeffSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
+                        P, nGs, gMap, a, b, incCont,
+                        as.integer(0), pbFun, new.env(), 
+                        package="BayesFactor")
+    simpleErr = propErrorEst(simpSamples[[2]] - nullLike)
+    logAbsSimpErr = simpSamples[[1]] - nullLike + log(simpleErr) 
+     
+    apx = gaussianApproxAOV(y,X,rscale,gMap,priorX,incCont)
+    impSamples = .Call("RimportanceSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
+                         P, nGs, gMap, a, b, apx$mu, apx$sig, incCont,
+                         as.integer(0), pbFun, new.env(), 
+                         package="BayesFactor")
+    impErr = propErrorEst(impSamples[[2]] - nullLike)
+    logAbsImpErr = impSamples[[1]] - nullLike + log(impErr) 
+    
+    method = ifelse(impErr>simpleErr,"simple","importance")
+  
+  }
+  
+  if(method=="importance"){
+
+    if(is.null(apx))  apx = gaussianApproxAOV(y,X,rscale,gMap,priorX,incCont)
+    returnList = .Call("RimportanceSamplerNwayAov", iters, XtCX, priorX, XtCy, ytCy, N, 
+                       P, nGs, gMap, a, b, apx$mu, apx$sig, incCont,
+                       as.integer(iters/100*progress), pbFun, new.env(), 
+                       package="BayesFactor")
+    
+  }else if(method=="simple"){
+    returnList = .Call("RjeffSamplerNwayAov", iters, XtCX, priorX, XtCy, ytCy, N, 
+                        P, nGs, gMap, a, b, incCont,
+                        as.integer(iters/100*progress), pbFun, new.env(), 
+                        package="BayesFactor")
+    
+  }else{
+    stop("Unknown sampling method requested in for nWayAOV.")
+  }
+  bf = returnList[[1]] - nullLike
+  
+  # estimate error
+  bfSamp = returnList[[2]] - nullLike
+  properror = propErrorEst(bfSamp)
+    
+  return(c(bf = bf, properror=properror))
+}
+
 createRscales <- function(formula, data, dataTypes, rscaleFixed = NULL, rscaleRandom = NULL, rscaleCont = NULL){
   
   rscaleFixed = rpriorValues("allNways","fixed",rscaleFixed)
@@ -132,7 +187,8 @@ design.names.intList <- function(effects, data, dataTypes){
     if(type=="fixed") 
       return(rowPaste(0:(nLevs-2), design.names.intList(effects[-1], data, dataTypes) ))
     if(type=="continuous") 
-      return(rowPaste(0:(nLevs-2), design.names.intList(effects[-1], data, dataTypes) ))
+      return( design.names.intList(effects[-1], data, dataTypes) )
+      #return(rowPaste(0:(nLevs-2), design.names.intList(effects[-1], data, dataTypes) ))
   }    
 }
 
@@ -141,8 +197,9 @@ design.projection.intList <- function(effects, data, dataTypes){
   firstCol = data[ ,effects[1] ]
   nLevs = nlevels( firstCol )
   if(length(effects)==1){
-    if(type=="random" | type=="continuous") return(diag(nLevs))
+    if(type=="random") return(diag(nLevs))
     if(type=="fixed") return(fixedFromRandomProjection(nLevs))
+    if(type=="continuous") return(matrix(1,1,1))
   }else{
     if(type=="random") 
       return(kronecker(diag(nLevs), design.projection.intList(effects[-1],data, dataTypes) ))
@@ -191,9 +248,16 @@ nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom
   rscale = createRscales(formula, data, dataTypes, rscaleFixed, rscaleRandom, rscaleCont)
   gMap = createGMap(formula, data, dataTypes)
   
-  retVal = nWayAOV(y, X, gMap = gMap, rscale = rscale, gibbs = gibbs, ...)
+  if(any(dataTypes=="continuous")){
+    continuous = termTypes(formula, data, dataTypes)=="continuous"
+    continuous = continuous[names(gMap)]
+  }else{
+    continuous = FALSE
+  }
+  
+  retVal = nWayAOV(y, X, gMap = gMap, rscale = rscale, gibbs = gibbs, continuous = continuous, ...)
   if(gibbs){
-    retVal <- mcmc(makeChainNeater(retVal, colnames(X), formula, data, dataTypes, gMap, unreduce))  
+    retVal <- mcmc(makeChainNeater(retVal, colnames(X), formula, data, dataTypes, gMap, unreduce, continuous))  
   }
   return(retVal)
 }  
@@ -213,7 +277,7 @@ makeLabelList <- function(formula, data, dataTypes, unreduce){
                        return(paste(term,"-",my.names,sep=""))
                      },
                      data = data, dataTypes=dataTypes)
-  
+
   # join them all together in one cector
   unlist(labelList)
 }
@@ -237,21 +301,27 @@ ureduceChains = function(chains, formula, data, dataTypes, gMap){
   do.call(cbind, unreducedChains)
 }
 
-makeChainNeater <- function(chains, Xnames, formula, data, dataTypes, gMap, unreduce){
+makeChainNeater <- function(chains, Xnames, formula, data, dataTypes, gMap, unreduce, continuous){
   P = length(gMap)
   nGs = max(gMap) + 1
   factors = fmlaFactors(formula, data)[-1]
   dataTypes = dataTypes[ names(dataTypes) %in% factors ]
+  types = termTypes(formula, data, dataTypes)
+  
+  if(any(continuous)){
+    gNames = paste("g",c(names(types[types!="continuous"]),"continuous"),sep="_")
+  }else{
+    gNames = paste("g",names(types), sep="_")  
+  }
   
   if(!unreduce | !any(dataTypes == "fixed")) {
-    labels = c("mu", Xnames, "sig2", paste("g",1:nGs,sep="_"))
+    labels = c("mu", Xnames, "sig2", gNames)
     colnames(chains) = labels 
     return(chains)
   }
   
   labels = c("mu")  
   betaChains = chains[,1:P + 1, drop = FALSE]
-  types = termTypes(formula, data, dataTypes)
   
   # Make column names 
   parLabels = makeLabelList(formula, data, dataTypes, unreduce)
@@ -261,7 +331,8 @@ makeChainNeater <- function(chains, Xnames, formula, data, dataTypes, gMap, unre
   
   newChains = cbind(chains[,1],betaChains,chains[,-(1:(P + 1))])
   
-  labels = c(labels, "sig2",paste("g",1:nGs,sep="_"))
+  labels = c(labels, "sig2", gNames)
   colnames(newChains) = labels 
   return(newChains)
 }
+

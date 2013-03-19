@@ -2,6 +2,28 @@ if(getRversion() >= '2.15.1') globalVariables("gIndex")
 
 mcoptions <- list(preschedule=FALSE, set.seed=TRUE)
 
+expString <- function(x){
+  doubleBase = .Machine$double.base
+  toBase10log = x / log(10)
+  toBaselog = x / log(doubleBase)
+  
+  numMax = .Machine$double.max.exp
+  numMin = .Machine$double.min.exp
+    
+  if(toBaselog>numMax){
+    first <- prettyNum( 10 ^ (toBase10log - floor(toBase10log)) ) 
+    second <- prettyNum( floor(toBase10log) )
+    return( paste( first, "e+", second, sep="" ) )
+  }else if(toBaselog < numMin){
+    first <- prettyNum( 10 ^ (1 - (ceiling(toBase10log) - toBase10log)) )
+    second <- prettyNum( ceiling(toBase10log)-1 )
+    return( paste( first, "e", second, sep="" ) )    
+  }else{
+    return( prettyNum( exp(x) ) )
+  }
+}
+
+
 alphabetizeTerms <- function(trms){
   splt = strsplit(trms,":",fixed=TRUE)
   sorted=lapply(splt, function(trm){
@@ -74,23 +96,53 @@ rpriorValues <- function(modelType,effectType=NULL,priorType=NULL){
     return(
       switch(effectType,
              fixed = switch(priorType, 
+                            ultrawide=1,
                             wide=sqrt(2)/2, 
                             medium=1/2, 
                             stop("Unknown prior type.")),
-             random = 1,
+             random = switch(priorType, 
+                             wide=sqrt(2)/2, 
+                             medium=1/2, 
+                             nuisance=1,
+                             ultrawide=1,
+                             stop("Unknown prior type.")),
              stop("Unknown prior type.")
       )
     )
   }
   
-  if(modelType=="ttest"){
+  if(modelType=="ttestTwo"){
     return(
-      switch(priorType, wide=1, medium=sqrt(2)/2, stop("Unknown prior type."))  
+      switch(priorType, 
+             ultrawide=sqrt(2),
+             wide=1, 
+             medium=sqrt(2)/2, 
+             stop("Unknown prior type."))  
+    )
+  }
+
+  if(modelType=="ttestOne"){
+    return(
+      switch(priorType, 
+             ultrawide=1,
+             wide=sqrt(2)/2, 
+             medium=1/2, 
+             stop("Unknown prior type."))  
     )
   }
   
+  
   if(modelType=="regression"){
-    return(1)  
+    #return(1)
+    return(
+      switch(priorType,
+             ultrawide=sqrt(2)/2,
+             wide=1/2, 
+             medium=sqrt(2)/4,
+             stop("Unknown prior type.")
+      )
+    )
+    
   }
   
   stop("Unknown prior type.")
@@ -135,3 +187,5 @@ binary <- function(x, dim) {
    }
    return(list(binary=bin, dicotomy=dicotomy))
 }
+
+
