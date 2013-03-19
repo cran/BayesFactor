@@ -1,6 +1,6 @@
-2ba913bb8957b8266f070825075263a9 *DESCRIPTION
+b03ad1d20b36e2c49af50713331a1fa0 *DESCRIPTION
 5560adb26527f813ba8d4a5dacfad0ff *NAMESPACE
-4d753d49432063822d4eaaf82777764b *NEWS
+d2ea0ebcbee5eb96642c16ae8ac5f43c *NEWS
 931aec573f1db81eb5da3e1f89e25c19 *R/BayesFactorPCL-package.R
 711988b1e14d3f31ed51d857cf24f43a *R/aaClasses.R
 fc9faf4bc1db615c6bc66ff04707e501 *R/aaGenerics.R
@@ -35,9 +35,9 @@ bb40f055d8057f17cbc54a506ae2983e *R/regressionBF-utility.R
 c64bb6131d459b9e23effd5e19ae0f9d *R/version.R
 84361c38301923ed3ebe640721267746 *data/puzzles.rda
 05d7c7c69cd3ab2c5fc154eef1b8b5fb *inst/SVN_VERSION
-7b024c180bd0aa1f958637ab1eb6af3a *inst/doc/Makefile
+72e818125f41873728504e99d25ff36f *inst/doc/index.R
 22bc16917011a347efb8f8df5ba1cfb9 *inst/doc/index.Rmd
-408c20472e6d35bc7b35834c973eeb56 *inst/doc/index.html
+d39b5c534715d0c83ac49c85c2ff73df *inst/doc/index.html
 0564649d8bd62cc0d9ed86a743686f99 *inst/etc/gibi.html
 16e72985ece1bbc9b407c43b21495110 *inst/etc/gibi.txt
 70aad7748c204bd6ff7a7937fd222f9b *inst/tests/test-anovaBF.R
