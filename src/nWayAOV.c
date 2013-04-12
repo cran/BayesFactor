@@ -1,10 +1,10 @@
 #include "BFPCL.h"
 
 
-double jeffmlikeNWayAov(double *XtCX, double *priorX, double *XtCy, double ytCy, int N, int P, double *g, int incCont, double logDetPrX)
+double jeffmlikeNWayAov(double *XtCX, double *priorX, double *XtCy, double ytCy, int N, int P, double *g, int incCont, double logDetPrX, int *colInfo)
 {
 	double *W,ldetS=0,ldetW,top,bottom1,bottom2,q;
-	int i,j, Psqr=P*P;
+	int i,j, Psqr=P*P, info=0;
   
 	W = Memcpy(Calloc(Psqr,double),XtCX,Psqr);
 	
@@ -22,7 +22,7 @@ double jeffmlikeNWayAov(double *XtCX, double *priorX, double *XtCy, double ytCy,
 		W[i + P*i] = W[i + P*i] + 1/g[i];
 	}
 
-  ldetW = -matrixDet(W, P, P, 1);
+  ldetW = -matrixDet(W, P, P, 1, &info);
   InvMatrixUpper(W, P);
 	internal_symmetrize(W, P);
 	
@@ -48,23 +48,26 @@ SEXP RjeffmlikeNWayAov(SEXP XtCXR, SEXP priorXR, SEXP XtCyR, SEXP ytCyR, SEXP NR
 	double *g = REAL(gR);
   int incCont  = INTEGER_VALUE(incContR);
   double logDetPrX = REAL(logDetPrXR)[0];
-
+  int cholInfo=0;
+  
 	SEXP ans;
 	PROTECT(ans = allocVector(REALSXP,1));
 	
 
-	REAL(ans)[0] = jeffmlikeNWayAov(XtCX, priorX, XtCy, ytCy, N, P, g, incCont, logDetPrX);
+	REAL(ans)[0] = jeffmlikeNWayAov(XtCX, priorX, XtCy, ytCy, N, P, g, incCont, logDetPrX, &cholInfo);
 	
 	UNPROTECT(1);
   
 	return(ans);
 }
 
-double jeffSamplerNwayAov(double *samples, double *gsamples, int iters, double *XtCX, double *priorX, double *XtCy, double ytCy, int N, int P,int nGs, int *gMap, double *a, double *b, int incCont, int progress, SEXP pBar, SEXP rho)
+double jeffSamplerNwayAov(double *samples, double *gsamples, int iters, double *XtCX, double *priorX, double *XtCy, double ytCy, int N, int P,int nGs, int *gMap, double *a, double *b, int incCont, int *badSamples, int progress, SEXP pBar, SEXP rho)
 {
-  int i=0,j=0;
+  int i=0,j=0, info=0, cholInfo=0,isFirst=1;
 	double avg = 0, *g1, g2[P], *W;
   double logDetPrX=0;
+  
+  *badSamples = 0;
   
 	// progress stuff
 	SEXP sampCounter, R_fcall;
@@ -74,7 +77,7 @@ double jeffSamplerNwayAov(double *samples, double *gsamples, int iters, double *
 	pSampCounter = INTEGER_POINTER(sampCounter);
 
   if(incCont){
-    logDetPrX = matrixDet(priorX, incCont, incCont, 1);
+    logDetPrX = matrixDet(priorX, incCont, incCont, 1, &info);
   }
   
   
@@ -103,28 +106,33 @@ double jeffSamplerNwayAov(double *samples, double *gsamples, int iters, double *
 			g2[j] = g1[gMap[j]];
 		}
 	  
-		samples[i] = jeffmlikeNWayAov(XtCX, priorX, XtCy, ytCy, N, P, g2, incCont, logDetPrX);
-		if(i==0)
-		{
-			avg = samples[i];
+    samples[i] = jeffmlikeNWayAov(XtCX, priorX, XtCy, ytCy, N, P, g2, incCont, logDetPrX,&cholInfo);
+    if(cholInfo){
+      *badSamples++;
 		}else{
-			avg = LogOnePlusExpX(samples[i]-avg)+avg;
-			//avg = LogOnePlusX(exp(avg-samples[i]))+samples[i];
+      if(isFirst)
+		  {
+			  avg = samples[i];
+        isFirst=0;
+		  }else{
+			  avg = LogOnePlusExpX(samples[i]-avg)+avg;
+			  //avg = LogOnePlusX(exp(avg-samples[i]))+samples[i];
+		  }
 		}
-	} 
+
+ } 
 	
 	UNPROTECT(2);
-  
-	return(avg-log(iters));
+	return(avg-log(iters - *badSamples));
 	
 }
 
 SEXP RjeffSamplerNwayAov(SEXP Riters, SEXP RXtCX, SEXP RpriorX, SEXP RXtCy, SEXP RytCy, SEXP RN, SEXP RP, SEXP RnGs, SEXP RgMap, SEXP Ra, SEXP Rb, SEXP RincCont, SEXP progressR, SEXP pBar, SEXP rho)
 {
   double *a,*b,*XtCy,*XtCX,ytCy,*samples,*avg, *priorX;
-	int iters,nGs,*gMap,N,P,progress,incCont;
+	int iters,nGs,*gMap,N,P,progress,incCont, badSamples=0;
 
-	SEXP Rsamples,Rgsamples,Ravg,returnList;
+	SEXP Rsamples,Rgsamples,Ravg,returnList,RbadSamples;
 	
 	iters = INTEGER_VALUE(Riters);
 	XtCX = REAL(RXtCX);
@@ -142,6 +150,7 @@ SEXP RjeffSamplerNwayAov(SEXP Riters, SEXP RXtCX, SEXP RpriorX, SEXP RXtCy, SEXP
 
 	PROTECT(Rsamples = allocVector(REALSXP,iters));
 	PROTECT(Ravg = allocVector(REALSXP,1));
+  PROTECT(RbadSamples = allocVector(REALSXP,1));
 	PROTECT(returnList = allocVector(VECSXP,3));
 	PROTECT(Rgsamples = allocMatrix(REALSXP,nGs,iters));	
 
@@ -149,24 +158,29 @@ SEXP RjeffSamplerNwayAov(SEXP Riters, SEXP RXtCX, SEXP RpriorX, SEXP RXtCy, SEXP
 	avg = REAL(Ravg);
 	
 	GetRNGstate();
-	avg[0] = jeffSamplerNwayAov(samples, REAL(Rgsamples), iters, XtCX, priorX,XtCy, ytCy, N, P, nGs, gMap, a, b, incCont, progress, pBar, rho);
+	avg[0] = jeffSamplerNwayAov(samples, REAL(Rgsamples), iters, XtCX, priorX,XtCy, ytCy, N, P, nGs, gMap, a, b, incCont, &badSamples, progress, pBar, rho);
 	PutRNGstate();
 	
+  REAL(RbadSamples)[0] = badSamples * 1.0;
+  
 	SET_VECTOR_ELT(returnList, 0, Ravg);
-    SET_VECTOR_ELT(returnList, 1, Rsamples);
-    SET_VECTOR_ELT(returnList, 2, Rgsamples);
-	
-	UNPROTECT(4);
+  SET_VECTOR_ELT(returnList, 1, Rsamples);
+  SET_VECTOR_ELT(returnList, 2, Rgsamples);
+	SET_VECTOR_ELT(returnList, 3, RbadSamples);
+  
+	UNPROTECT(5);
 	
 	return(returnList);
 }
 
 
-double importanceSamplerNwayAov(double *samples, double *qsamples, int iters, double *XtCX, double *priorX, double *XtCy, double ytCy, int N, int P,int nGs, int *gMap, double *a, double *b, double *mu, double *sig, int incCont, int progress, SEXP pBar, SEXP rho)
+double importanceSamplerNwayAov(double *samples, double *qsamples, int iters, double *XtCX, double *priorX, double *XtCy, double ytCy, int N, int P,int nGs, int *gMap, double *a, double *b, double *mu, double *sig, int incCont, int *badSamples, int progress, SEXP pBar, SEXP rho)
 {
-  int i=0,j=0;
+  int i=0,j=0, info=0, cholInfo=0, isFirst=1;
 	double avg = 0, *q1, g2[P], sumq=0, sumdinvgamma=0, sumdnorm=0;
 	double logDetPrX=0;
+  
+  *badSamples = 0;
   
 	// progress stuff
 	SEXP sampCounter, R_fcall;
@@ -176,7 +190,7 @@ double importanceSamplerNwayAov(double *samples, double *qsamples, int iters, do
 	pSampCounter = INTEGER_POINTER(sampCounter);
 
   if(incCont){
-    logDetPrX = matrixDet(priorX, incCont, incCont, 1);
+    logDetPrX = matrixDet(priorX, incCont, incCont, 1, &info);
   }
 	for(i=0;i<iters;i++)
 	{
@@ -207,28 +221,33 @@ double importanceSamplerNwayAov(double *samples, double *qsamples, int iters, do
 			g2[j] = exp(q1[gMap[j]]);
 		}
 	
-		samples[i] = jeffmlikeNWayAov(XtCX, priorX, XtCy, ytCy, N, P, g2, incCont, logDetPrX) + sumq + sumdinvgamma - sumdnorm;
-		if(i==0)
-		{
-			avg = samples[i];
+    samples[i] = jeffmlikeNWayAov(XtCX, priorX, XtCy, ytCy, N, P, g2, incCont, logDetPrX, &cholInfo) + sumq + sumdinvgamma - sumdnorm;;
+		if(cholInfo){
+      *badSamples++;
 		}else{
-			avg = LogOnePlusExpX(samples[i]-avg)+avg;
-			//avg = LogOnePlusX(exp(avg-samples[i]))+samples[i];
+    	if(isFirst)
+  		{
+  			avg = samples[i];
+        isFirst=0;
+  		}else{
+  			avg = LogOnePlusExpX(samples[i]-avg)+avg;
+  			//avg = LogOnePlusX(exp(avg-samples[i]))+samples[i];
+  		}    
 		}
 	}
 	
 	UNPROTECT(2);
 	
-	return(avg-log(iters));
+	return(avg-log(iters-*badSamples));
 	
 }
 
 SEXP RimportanceSamplerNwayAov(SEXP Riters, SEXP RXtCX, SEXP RpriorX, SEXP RXtCy, SEXP RytCy, SEXP RN, SEXP RP, SEXP RnGs, SEXP RgMap, SEXP Ra, SEXP Rb, SEXP Rmu, SEXP Rsig, SEXP RincCont, SEXP progressR, SEXP pBar, SEXP rho)
 {
 	double *a,*b,*XtCy,*XtCX,ytCy,*samples,*avg, *mu, *sig, *priorX;
-	int iters,nGs,*gMap,N,P,progress,incCont;
+	int iters,nGs,*gMap,N,P,progress,incCont,badSamples=0;
 
-	SEXP Rsamples,Rgsamples,Ravg,returnList;
+	SEXP Rsamples,Rgsamples,Ravg,returnList,RbadSamples;
 	
 	iters = INTEGER_VALUE(Riters);
 	XtCX = REAL(RXtCX);
@@ -249,30 +268,36 @@ SEXP RimportanceSamplerNwayAov(SEXP Riters, SEXP RXtCX, SEXP RpriorX, SEXP RXtCy
 	
 	PROTECT(Rsamples = allocVector(REALSXP,iters));
 	PROTECT(Ravg = allocVector(REALSXP,1));
-	PROTECT(returnList = allocVector(VECSXP,3));
+  PROTECT(RbadSamples = allocVector(REALSXP,1));
+  PROTECT(returnList = allocVector(VECSXP,3));
 	PROTECT(Rgsamples = allocMatrix(REALSXP,nGs,iters));	
 
 	samples = REAL(Rsamples);
 	avg = REAL(Ravg);
 	
 	GetRNGstate();
-	avg[0] = importanceSamplerNwayAov(samples, REAL(Rgsamples), iters, XtCX, priorX, XtCy, ytCy, N, P, nGs, gMap, a, b, mu, sig, incCont, progress, pBar, rho);
+	avg[0] = importanceSamplerNwayAov(samples, REAL(Rgsamples), iters, XtCX, priorX, XtCy, ytCy, N, P, nGs, gMap, a, b, mu, sig, incCont, &badSamples, progress, pBar, rho);
 	PutRNGstate();
 	
+  REAL(RbadSamples)[0] = badSamples * 1.0;
+
 	SET_VECTOR_ELT(returnList, 0, Ravg);
-    SET_VECTOR_ELT(returnList, 1, Rsamples);
-    SET_VECTOR_ELT(returnList, 2, Rgsamples);
-	
-	UNPROTECT(4);
+  SET_VECTOR_ELT(returnList, 1, Rsamples);
+  SET_VECTOR_ELT(returnList, 2, Rgsamples);
+  SET_VECTOR_ELT(returnList, 3, RbadSamples);
+ 
+  
+	UNPROTECT(5);
 	
 	return(returnList);
 }
 
-SEXP RGibbsNwayAov(SEXP Riters, SEXP Ry, SEXP RX, SEXP RXtX, SEXP RpriorX, SEXP RXty, SEXP RN, SEXP RP, SEXP RnGs, SEXP RgMap, SEXP Rr, SEXP RincCont, SEXP progressR, SEXP pBar, SEXP rho)
+SEXP RGibbsNwayAov(SEXP Riters, SEXP Ry, SEXP RX, SEXP RXtX, SEXP RpriorX, SEXP RXty, SEXP RN, SEXP RP, SEXP RnGs, SEXP RgMap, SEXP Rr, SEXP RincCont, SEXP RignoreCols, SEXP Rthin, SEXP progressR, SEXP pBar, SEXP rho)
 {
 	double *a,*b,*Xty,*XtX,*samples,*X, *y, *r,*priorX;
-	int iters,nGs,*gMap,N,P,progress,incCont;
-
+	int iters,nGs,*gMap,N,P,progress,incCont,*ignoreCols, nOutputPars=0,thin,i;
+  int effectiveIterations;
+  
 	SEXP Rsamples;
 	
 	iters = INTEGER_VALUE(Riters);
@@ -287,14 +312,22 @@ SEXP RGibbsNwayAov(SEXP Riters, SEXP Ry, SEXP RX, SEXP RXtX, SEXP RpriorX, SEXP 
 	N = INTEGER_VALUE(RN);
 	P = INTEGER_VALUE(RP);
 	progress = INTEGER_VALUE(progressR);
-  incCont = INTEGER_VALUE(RincCont);
-	
-	PROTECT(Rsamples = allocMatrix(REALSXP,iters, 2 + P + nGs));
-
+  incCont = INTEGER_VALUE(RincCont); 
+  ignoreCols = INTEGER_POINTER(RignoreCols);  
+  thin = INTEGER_VALUE(Rthin); 
+  
+  effectiveIterations = iters / thin;
+  
+  for(i=0;i<(2 + P + nGs);i++){
+    if(!ignoreCols[i]) nOutputPars++;
+  }
+  
+	PROTECT(Rsamples = allocMatrix(REALSXP,effectiveIterations, nOutputPars));
+  
 	samples = REAL(Rsamples);
 	  
 	GetRNGstate();
-	GibbsNwayAov(samples, iters, y, X, XtX, priorX, Xty, N, P, nGs, gMap, r, incCont, progress, pBar, rho);
+	GibbsNwayAov(samples, iters, y, X, XtX, priorX, Xty, N, P, nGs, gMap, r, incCont, ignoreCols, nOutputPars, thin, progress, pBar, rho);
 	PutRNGstate();
 	
 	UNPROTECT(1);
@@ -302,11 +335,12 @@ SEXP RGibbsNwayAov(SEXP Riters, SEXP Ry, SEXP RX, SEXP RXtX, SEXP RpriorX, SEXP 
 	return(Rsamples);
 }
 
-void GibbsNwayAov(double *chains, int iters, double *y, double *X, double *XtX, double *priorX, double *Xty, int N, int P, int nGs, int *gMap, double *r, int incCont, int progress, SEXP pBar, SEXP rho)
+void GibbsNwayAov(double *chains, int iters, double *y, double *X, double *XtX, double *priorX, double *Xty, int N, int P, int nGs, int *gMap, double *r, int incCont, int *ignoreCols, int nOutputPars, int thin, int progress, SEXP pBar, SEXP rho)
 {
 	int i=0,j=0,k=0, nPars=2+P+nGs, P1Sq=(P+1)*(P+1), P1=P+1, iOne=1,nParG[nGs];
 	double *g1, Sigma[P1Sq], SSq, oneOverSig2,dZero=0,dOne=1,dnegOne=-1;
-	
+	double oneChainCol[nPars];
+  
 	double g[nGs], beta[P+1], sig2, yTemp[N], SSqG[nGs],bTemp;
 	
 	// progress stuff
@@ -405,12 +439,19 @@ void GibbsNwayAov(double *chains, int iters, double *y, double *X, double *XtX, 
       g[j]  = 1/rgamma( (nParG[j]+1)/2.0, 2.0/bTemp);
     }
 	
-		Memcpy(chains + nPars*i,beta,P+1);	
-		chains[nPars*i+P+1] = sig2;	
-		Memcpy(chains + nPars*i + P + 2,g,nGs);	
-	
-		
-	}
+  	Memcpy(oneChainCol, beta,P+1);	
+		oneChainCol[P+1] = sig2;	
+		Memcpy(oneChainCol + P + 2,g,nGs);	
+    
+    // Copy only requested columns to the final answer
+    if(!(i % thin)){
+      k=0;
+      for(j=0;j<(2+P+nGs);j++){
+        if(!ignoreCols[j]) chains[k++ + nOutputPars* (i/thin)] = oneChainCol[j];
+      }
+    } 	
+	 
+   } // end MCMC iterations
 	
 	UNPROTECT(2);
 		

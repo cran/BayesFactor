@@ -1,7 +1,21 @@
+  CHANGES IN BayesFactor VERSION 0.9.4
+
+CHANGES
+  *  Fixed bug in sampling of posteriors in linear models
+  *  Fixed bug computing the Bayes factor of unbalanced one-way ANOVA with two levels - caused function to fail
+  *  Fixed occasional problem where optimization for the importance sampler would fail, giving a numerically singular matrix
+  *  Fixed problem where extremely rare large or small g values from the sampler would cause the Bayes factor to be NA (again, creating a singular numerically singular matrix). These very rare samples are now disregarded.
+  *  Added global option to turn progress bars on or off; use options(BFprogress = TRUE) or options(BFprogress = FALSE) 
+  *  Added MCMC chain thinning to nWayAOV - to use, pass "thin" argument to posterior() or lmBF()
+  *  Added MCMC chain column filtering, useful for low memory systems. To use, pass "columnFilter" argument to posterior() or lmBF(). See the help for posterior() for more details.
+  *  Added function generalTestBF(), which allows testing of restrictions on a full model in a manner similar to regressionBF() and anovaBF().
+  *  Added "noSample" argument to many functions. These will disable time-consuming sampling, and return an object of the same structure as if sampling had been done. This allows for the culling of BayesFactor objects and preplanning chain analyses before sampling
+  *  Added is.na() method for BFBayesFactor objects. When combined with recompute() and noSample (see above), this allows one to create lists of models with missing Bayes factors, remove uninteresting models, then recompute only the missing ones
+
   CHANGES IN BayesFactor VERSION 0.9.3
 
 CHANGES
-  *  Restricted to R 3.0.0 (due to vignette compilation). (0.9.2 will be the last version supported on R 2.x)
+  *  Restricted to R 3.0.0 (due to vignette compilation). 
 
 
   CHANGES IN BayesFactor VERSION 0.9.2

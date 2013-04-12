@@ -1,3 +1,27 @@
+singleGBayesFactor <- function(y,X,rscale,gMap){
+  if(ncol(X)==1){
+    dat = data.frame(y=y,x=as.factor(X[,1])) 
+    freqs = table(dat$x)
+    t = t.test(y~x,data=dat, var.eq=TRUE)$statistic
+    bf = ttest.tstat(t=t, n1=freqs[1], n2=freqs[2],rscale=rscale*sqrt(2))
+    return(bf)
+  }else{
+    # change from C indexing to R indexing
+    gMap = gMap + 1
+    integral = integrate(
+      Vectorize(
+        function(g,y,Xm,rscale,gMap){
+          exp(Qg(log(g),y,Xm,rscale,gMap,limit=FALSE) - log(g))
+        },"g")
+      ,0,Inf,y=y,Xm=X,rscale=rscale,gMap=gMap)
+    
+    marg.like.1 = integral$value
+    prop.error = integral$abs.error / marg.like.1
+    lbf = log(marg.like.1)
+    return(list(bf = lbf, properror=prop.error))
+  }
+}
+
 
 doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, XtCy, ytCy, N, P, nGs, gMap, a, b, incCont, progress, pbFun)
 {
@@ -7,6 +31,8 @@ doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, Xt
   optMethod = options()$BFapproxOptimizer
   testNsamples = options()$BFpretestIterations
   
+  if(ncol(X)==1) method="simple"
+  
   if(method=="auto"){
     simpSamples = .Call("RjeffSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
                         P, nGs, gMap, a, b, incCont,
@@ -15,16 +41,20 @@ doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, Xt
     simpleErr = propErrorEst(simpSamples[[2]] - nullLike)
     logAbsSimpErr = simpSamples[[1]] - nullLike + log(simpleErr) 
      
-    apx = gaussianApproxAOV(y,X,rscale,gMap,priorX,incCont)
-    impSamples = .Call("RimportanceSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
+    
+    apx = try(gaussianApproxAOV(y,X,rscale,gMap,priorX,incCont))
+    if(inherits(apx,"try-error")){
+      method="simple"
+    }else{
+      impSamples = .Call("RimportanceSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
                          P, nGs, gMap, a, b, apx$mu, apx$sig, incCont,
                          as.integer(0), pbFun, new.env(), 
                          package="BayesFactor")
-    impErr = propErrorEst(impSamples[[2]] - nullLike)
-    logAbsImpErr = impSamples[[1]] - nullLike + log(impErr) 
-    
-    method = ifelse(impErr>simpleErr,"simple","importance")
-  
+      impErr = propErrorEst(impSamples[[2]] - nullLike)
+      logAbsImpErr = impSamples[[1]] + log(impErr) - nullLike   
+      
+      method = ifelse(impErr>simpleErr,"simple","importance")
+    }
   }
   
   if(method=="importance"){
@@ -237,12 +267,24 @@ fixedFromRandomProjection <- function(nlevRandom){
   return(matrix(S,nrow=nlevRandom))
 }
 
+centerContinuousColumns <- function(data){
+  mycols = lapply(data,function(colmn){
+    if(is.factor(colmn)){
+      return(colmn)
+    }else{
+      return(colmn - mean(colmn))
+    }
+  })
+  return(data.frame(mycols))
+}
 
-nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom=NULL, rscaleCont=NULL, gibbs=FALSE, unreduce=TRUE, ...){
+nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom=NULL, rscaleCont=NULL, gibbs=FALSE, columnFilter = NULL, unreduce=TRUE, ...){
   
   checkFormula(formula, data, analysis = "lm")
-  y = data[,stringFromFormula(formula[[2]])]
   
+  
+  y = data[,stringFromFormula(formula[[2]])]
+  data <- centerContinuousColumns(data)
   X = fullDesignMatrix(formula, data, dataTypes)
   
   rscale = createRscales(formula, data, dataTypes, rscaleFixed, rscaleRandom, rscaleCont)
@@ -255,17 +297,27 @@ nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom
     continuous = FALSE
   }
   
-  retVal = nWayAOV(y, X, gMap = gMap, rscale = rscale, gibbs = gibbs, continuous = continuous, ...)
+  ## Determine which columns we will ignore
+  if(is.null(columnFilter)){
+    ignoreCols = NULL
+  }else{
+    ignoreCols = filterVectorLogical(columnFilter, names(gMap))
+  }
+  if(all(ignoreCols) & !is.null(ignoreCols)) stop("Filtering out all chain columns of interest is not allowed.")
+  
+  retVal = nWayAOV(y, X, gMap = gMap, rscale = rscale, gibbs = gibbs, continuous = continuous, ignoreCols=ignoreCols,...)
   if(gibbs){
-    retVal <- mcmc(makeChainNeater(retVal, colnames(X), formula, data, dataTypes, gMap, unreduce, continuous))  
+    retVal <- mcmc(makeChainNeater(retVal, colnames(X), formula, data, dataTypes, gMap, unreduce, continuous, columnFilter))  
   }
   return(retVal)
 }  
 
 
-makeLabelList <- function(formula, data, dataTypes, unreduce){
+makeLabelList <- function(formula, data, dataTypes, unreduce, columnFilter){
   
   terms = attr(terms(formula, data = data), "term.labels")
+  if(!is.null(columnFilter))
+    terms = terms[!filterVectorLogical(columnFilter,terms)]
   
   if(unreduce) 
     dataTypes[dataTypes == "fixed"] = "random"
@@ -282,9 +334,15 @@ makeLabelList <- function(formula, data, dataTypes, unreduce){
   unlist(labelList)
 }
 
-unreduceChainPart = function(term, chains, data, dataTypes, gMap){
+unreduceChainPart = function(term, chains, data, dataTypes, gMap, ignoreCols){
   effects = strsplit(term,":", fixed = TRUE)[[1]]
-  chains = chains[, names(gMap)==term, drop = FALSE ]
+  myCols = names(gMap)==term
+  if(ignoreCols[myCols][1]) return(NULL)
+  
+  # Figure out which columns we need to look at, given that some are missing
+  cumulativeIgnored = sum(ignoreCols[1:which(myCols)[1]]) # How many are ignored up to the one of interest?
+  remappedCols = which(myCols) - cumulativeIgnored
+  chains = chains[, remappedCols, drop = FALSE ]
   if(any(dataTypes[effects]=="fixed")){
     S = design.projection.intList(effects, data, dataTypes)
     return(chains%*%t(S))
@@ -293,43 +351,50 @@ unreduceChainPart = function(term, chains, data, dataTypes, gMap){
   }
 }
 
-ureduceChains = function(chains, formula, data, dataTypes, gMap){
+ureduceChains = function(chains, formula, data, dataTypes, gMap, ignoreCols){
   
   terms = attr(terms(formula, data = data), "term.labels")
   
-  unreducedChains = lapply(terms, unreduceChainPart, chains=chains, data = data, dataTypes = dataTypes, gMap = gMap)  
+  unreducedChains = lapply(terms, unreduceChainPart, chains=chains, data = data, dataTypes = dataTypes, gMap = gMap, ignoreCols=ignoreCols)  
   do.call(cbind, unreducedChains)
 }
 
-makeChainNeater <- function(chains, Xnames, formula, data, dataTypes, gMap, unreduce, continuous){
+makeChainNeater <- function(chains, Xnames, formula, data, dataTypes, gMap, unreduce, continuous, columnFilter){
   P = length(gMap)
   nGs = max(gMap) + 1
   factors = fmlaFactors(formula, data)[-1]
   dataTypes = dataTypes[ names(dataTypes) %in% factors ]
   types = termTypes(formula, data, dataTypes)
+   
+  lastPars = ncol(chains) + (-nGs):0
   
   if(any(continuous)){
     gNames = paste("g",c(names(types[types!="continuous"]),"continuous"),sep="_")
   }else{
     gNames = paste("g",names(types), sep="_")  
   }
+    
+  if(is.null(columnFilter)){
+    ignoreCols = ignoreCols = rep(0,P)
+  }else{
+    ignoreCols=filterVectorLogical(columnFilter, names(gMap))
+  }
   
   if(!unreduce | !any(dataTypes == "fixed")) {
-    labels = c("mu", Xnames, "sig2", gNames)
+    labels = c("mu", Xnames[!ignoreCols], "sig2", gNames)
     colnames(chains) = labels 
     return(chains)
   }
   
-  labels = c("mu")  
-  betaChains = chains[,1:P + 1, drop = FALSE]
-  
   # Make column names 
-  parLabels = makeLabelList(formula, data, dataTypes, unreduce)
-  labels = c(labels, parLabels)
+  parLabels = makeLabelList(formula, data, dataTypes, unreduce, columnFilter)
+    
+  labels = c("mu", parLabels)
+
+  betaChains = chains[,1:(ncol(chains)-2-nGs) + 1, drop = FALSE]  
+  betaChains = ureduceChains(betaChains, formula, data, dataTypes, gMap, ignoreCols)
   
-  betaChains = ureduceChains(betaChains, formula, data, dataTypes, gMap)
-  
-  newChains = cbind(chains[,1],betaChains,chains[,-(1:(P + 1))])
+  newChains = cbind(chains[,1],betaChains,chains[,lastPars])
   
   labels = c(labels, "sig2", gNames)
   colnames(newChains) = labels 

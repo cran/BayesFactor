@@ -4,9 +4,9 @@
 \usage{
   anovaBF(formula, data, whichRandom = NULL,
     whichModels = "withmain", iterations = 10000,
-    progress = TRUE, rscaleFixed = "medium",
-    rscaleRandom = "nuisance", multicore = FALSE,
-    method = "auto")
+    progress = options()$BFprogress,
+    rscaleFixed = "medium", rscaleRandom = "nuisance",
+    multicore = FALSE, method = "auto", noSample = FALSE)
 }
 \arguments{
   \item{formula}{a formula containing all factors to
@@ -39,6 +39,9 @@
 
   \item{method}{approximation method, if needed. See
   \code{\link{nWayAOV}} for details.}
+
+  \item{noSample}{if \code{TRUE}, do not sample, instead
+  returning NA.}
 }
 \value{
   An object of class \code{BFBayesFactor}, containing the

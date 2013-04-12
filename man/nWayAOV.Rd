@@ -3,8 +3,10 @@
 \title{Use ANOVA design matrix to compute Bayes factors or sample posterior}
 \usage{
   nWayAOV(y, X, struc = NULL, gMap = NULL, rscale,
-    iterations = 10000, progress = TRUE, gibi = NULL,
-    gibbs = FALSE, method = "auto", continuous = FALSE)
+    iterations = 10000, progress = options()$BFprogress,
+    gibi = NULL, gibbs = FALSE, ignoreCols = NULL,
+    thin = 1, method = "auto", continuous = FALSE,
+    noSample = FALSE)
 }
 \arguments{
   \item{y}{vector of observations}
@@ -33,6 +35,16 @@
   \item{gibbs}{if \code{TRUE}, return samples from the
   posterior instead of a Bayes factor}
 
+  \item{ignoreCols}{if \code{NULL} and \code{gibbs=TRUE},
+  all parameter estimates are returned in the MCMC object.
+  If not \code{NULL}, a vector of length P-1 (where P is
+  number of columns in the design matrix) giving which
+  effect estimates to ignore in output}
+
+  \item{thin}{MCMC chain to every \code{thin} iterations.
+  Default of 1 means no thinning. Only used if
+  \code{gibbs=TRUE}}
+
   \item{method}{the integration method (only valid if
   \code{gibbs=TRUE}); one of "simple", "importance",
   "laplace", or "auto"}
@@ -41,6 +53,11 @@
   covariates are included, or a logical vector of length
   equal to number of columns of X indicating which columns
   of the design matrix represent continuous covariates}
+
+  \item{noSample}{if \code{TRUE}, do not sample, instead
+  returning NA. This is intended to be used with functions
+  generating and testing many models at one time, such as
+  \code{\link{anovaBF}}}
 }
 \value{
   If \code{posterior} is \code{FALSE}, a vector of length 2
