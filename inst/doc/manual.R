@@ -40,7 +40,6 @@ bf
 
 
 ## @knitr tsamp
-options()$BFprogress
 chains = posterior(bf, iterations = 1000)
 summary(chains)
 
