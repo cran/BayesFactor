@@ -13,19 +13,21 @@
    }
 
    pre .literal {
-     color: rgb(88, 72, 246)
+     color: #990073
    }
 
    pre .number {
-     color: rgb(0, 0, 205);
+     color: #099;
    }
 
    pre .comment {
-     color: rgb(76, 136, 107);
+     color: #998;
+     font-style: italic
    }
 
    pre .keyword {
-     color: rgb(0, 0, 255);
+     color: #900;
+     font-weight: bold
    }
 
    pre .identifier {
@@ -33,7 +35,7 @@
    }
 
    pre .string {
-     color: rgb(3, 106, 7);
+     color: #d14;
    }
 </style>
 
@@ -44,7 +46,7 @@ hljs.initHighlightingOnLoad();
 </script>
 
 <!-- MathJax scripts -->
-<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 
 
@@ -56,6 +58,22 @@ body, td {
   margin: 8px;
 }
 
+span.socialtext {
+  position:absolute; 
+  top:50%; 
+  height:1em; 
+  margin-top:-.5em;
+  text-decoration:none;
+  color: black;
+}
+
+.social {
+    position:relative;
+}
+
+div.socialsep {
+  height:1em;
+}
 
 a:link {color: #3DA6CC;}
 a:visited {color: #CA17E6;}
@@ -182,7 +200,7 @@ hr {
 <body>
 <!--
 %\VignetteEngine{knitr}
-%\VignetteIndexEntry{Using the BayesFactor package, version 0.9.2+}
+%\VignetteIndexEntry{Prior checks}
 \usepackage[utf8]{inputenc}
 -->
 
@@ -401,7 +419,7 @@ as.vector(lmBF(x ~ grp + id, data = dat, whichRandom = &quot;id&quot;)/idOnly)
 
 <hr/>
 
-<p><em>This document was compiled with version 0.9.6 of BayesFactor (R version 3.0.2 (2013-09-25) on x86_64-apple-darwin10.8.0).</em></p>
+<p><em>This document was compiled with version 0.9.7 of BayesFactor (R version 3.0.2 (2013-09-25) on x86_64-apple-darwin10.8.0).</em></p>
 
 </body>
 

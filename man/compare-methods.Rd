@@ -8,23 +8,27 @@
 \alias{compare,BFmcmc,missing,ANY-method}
 \alias{compare,BFoneSample,missing,data.frame-method}
 \title{Compare two models, with respect to some data}
+\usage{
+compare(numerator, denominator, data, ...)
+}
 \arguments{
   \item{numerator}{first model}
 
-  \item{denominator}{second model}
+  \item{denominator}{second model (if omitted, compare to
+  predefined null)}
 
   \item{data}{data for the comparison}
 
   \item{...}{arguments passed to and from related methods}
 }
 \value{
-  The compare function will return a model comparison
-  object, typically a Bayes factor
+The compare function will return a model comparison object,
+typically a Bayes factor
 }
 \description{
-  This method is used primarily in the backend, and will
-  only rarely be called by the end user. But see the
-  examples below for a demonstration.
+This method is used primarily in the backend, and will only
+rarely be called by the end user. But see the examples
+below for a demonstration.
 }
 \examples{
 ## Sample from the posteriors for two models
