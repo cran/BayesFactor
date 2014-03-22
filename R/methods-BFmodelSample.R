@@ -133,6 +133,16 @@ setMethod('posterior', signature(model = "BFindepSample", index = "missing", dat
 })
 
 #' @rdname posterior-methods
+#' @aliases posterior,BFcontingencyTable,missing,data.frame,numeric-method
+setMethod('posterior', signature(model = "BFcontingencyTable", index = "missing", data = "data.frame", iterations = "numeric"), 
+          function(model, index = NULL, data, iterations, ...){
+            model = formula(model@identifier)
+            type = model@type
+            prior = model@prior$a
+            sampleContingency(model, type, prior, data = data, iterations = iterations, ...)                
+          })
+
+#' @rdname posterior-methods
 #' @aliases posterior,BFoneSample,missing,data.frame,numeric-method
 setMethod('posterior', signature(model = "BFoneSample", index = "missing", data = "data.frame", iterations = "numeric"), 
   function(model, index = NULL, data, iterations, ...){
@@ -143,6 +153,18 @@ setMethod('posterior', signature(model = "BFoneSample", index = "missing", data 
                           nullInterval = interval, ...)[["chains"]]
      new("BFmcmc",chains,model = model, data = data)         
 })
+
+#' @rdname posterior-methods
+#' @aliases posterior,BFoneSample,missing,data.frame,numeric-method
+setMethod('posterior', signature(model = "BFmetat", index = "missing", data = "data.frame", iterations = "numeric"), 
+          function(model, index = NULL, data, iterations, ...){
+            rscale = model@prior$rscale
+            interval = model@prior$nullInterval
+            chains = meta.t.Metrop(t = data$t, n1 = data$n1, n2 = data$n2, iterations = iterations, 
+                                   rscale = rscale, nullInterval = interval,  ...)
+            new("BFmcmc",chains, model = model, data = data)         
+          })
+
 
 ###########
 ## S3

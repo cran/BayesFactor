@@ -27,6 +27,7 @@
 ##' @param noSample if \code{TRUE}, do not sample, instead returning NA.
 ##' @return An object of class \code{BFBayesFactor}, containing the computed 
 ##'   model comparisons
+##' @param callback callback function for third-party interfaces 
 ##' @author Richard D. Morey (\email{richarddmorey@@gmail.com})
 ##' @export
 ##' @references
@@ -70,7 +71,7 @@
 generalTestBF <- 
   function(formula, data, whichRandom = NULL, 
            whichModels = "withmain", neverExclude=NULL, iterations = 10000, progress = options()$BFprogress,
-           rscaleFixed = "medium", rscaleRandom = "nuisance", rscaleCont="medium", multicore = FALSE, method="auto",noSample=FALSE)
+           rscaleFixed = "medium", rscaleRandom = "nuisance", rscaleCont="medium", multicore = FALSE, method="auto",noSample=FALSE, callback=function(...) as.integer(0))
   {
     checkFormula(formula, data, analysis = "lm")
     # pare whichRandom down to terms that appear in the formula
@@ -87,29 +88,45 @@ generalTestBF <-
                                                   "options('BFMaxModels').")
     
     if(multicore){
-      if(progress) warning("Progress bars are suppressed when running multicore.")
-      if(!require(doMC)){
+      message("Progress bars and callbacks are suppressed when running multicore.")
+      if(!require(doMC, quietly = TRUE)){
         stop("Required package (doMC) missing for multicore functionality.")
       } 
       
-      registerDoMC()
-      if(getDoParWorkers()==1){
+      doMC::registerDoMC()
+      if(foreach::getDoParWorkers()==1){
         warning("Multicore specified, but only using 1 core. Set options(cores) to something >1.")
       }
       
-      bfs <- foreach(gIndex=models, .options.multicore=mcoptions) %dopar% 
+      bfs <- foreach::"%dopar%"(
+        foreach::foreach(gIndex=models, .options.multicore=mcoptions),
         lmBF(gIndex,data = data, whichRandom = whichRandom, 
              rscaleFixed = rscaleFixed, rscaleRandom = rscaleRandom,
              rscaleCont = rscaleCont, iterations = iterations, method=method,
              progress=FALSE,noSample=noSample)
-      
+        )
     }else{ # Single core
       
-      if(progress) myapply = pblapply else myapply = lapply
-      bfs <- myapply(models, lmBF, data = data, whichRandom = whichRandom,
-                     rscaleFixed = rscaleFixed, rscaleRandom = rscaleRandom,
-                     rscaleCont = rscaleCont, iterations = iterations, 
-                     progress = FALSE, method = method,noSample=noSample)
+      bfs = NULL
+      myCallback <- function(prgs){
+        frac <- (i - 1 + prgs/1000)/length(models)
+        ret <- callback(frac*1000)
+        return(as.integer(ret))
+      }
+      if(progress){
+        pb = txtProgressBar(min = 0, max = length(models), style = 3)
+      }else{
+        pb = NULL
+      }
+      for(i in 1:length(models)){
+        oneModel <- lmBF(models[[i]],data = data, whichRandom = whichRandom,
+          rscaleFixed = rscaleFixed, rscaleRandom = rscaleRandom,
+          rscaleCont = rscaleCont, iterations = iterations, 
+          progress = FALSE, method = method,noSample=noSample,callback=myCallback)
+        if(inherits(pb,"txtProgressBar")) setTxtProgressBar(pb, i)
+        bfs = c(bfs,oneModel)
+      }
+      if(inherits(pb,"txtProgressBar")) close(pb)
       
     }
     

@@ -4,9 +4,11 @@
 \alias{posterior,BFBayesFactor,missing,missing,missing-method}
 \alias{posterior,BFBayesFactor,missing,missing,numeric-method}
 \alias{posterior,BFBayesFactor,numeric,missing,numeric-method}
+\alias{posterior,BFcontingencyTable,missing,data.frame,numeric-method}
 \alias{posterior,BFindepSample,missing,data.frame,numeric-method}
 \alias{posterior,BFlinearModel,missing,data.frame,missing-method}
 \alias{posterior,BFlinearModel,missing,data.frame,numeric-method}
+\alias{posterior,BFmetat,missing,data.frame,numeric-method}
 \alias{posterior,BFoneSample,missing,data.frame,numeric-method}
 \title{Sample from the posterior distribution of one of several models.}
 \usage{
@@ -30,8 +32,14 @@ posterior(model, index, data, iterations, ...)
 \S4method{posterior}{BFindepSample,missing,data.frame,numeric}(model,
   index = NULL, data, iterations, ...)
 
+\S4method{posterior}{BFcontingencyTable,missing,data.frame,numeric}(model,
+  index = NULL, data, iterations, ...)
+
 \S4method{posterior}{BFoneSample,missing,data.frame,numeric}(model,
   index = NULL, data, iterations, ...)
+
+\S4method{posterior}{BFmetat,missing,data.frame,numeric}(model, index = NULL,
+  data, iterations, ...)
 }
 \arguments{
   \item{model}{or set of models from which to sample}

@@ -5,6 +5,18 @@
 
 <title>Prior checks</title>
 
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
 <!-- Styles for R syntax highlighter -->
 <style type="text/css">
    pre .operator,
@@ -46,7 +58,7 @@ hljs.initHighlightingOnLoad();
 </script>
 
 <!-- MathJax scripts -->
-<script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
 
 
@@ -218,12 +230,12 @@ hr {
 
 <pre><code class="r"># Create data
 x &lt;- rnorm(20)
-x[1:10] = x[1:10] + 0.2
-grp = factor(rep(1:2, each = 10))
+x[1:10] = x[1:10] + .2
+grp = factor(rep(1:2,each=10))
 
-dat = data.frame(x = x, grp = grp)
+dat = data.frame(x=x,grp=grp)
 
-t.test(x ~ grp, data = dat)
+t.test(x ~ grp, data=dat)
 </code></pre>
 
 <pre><code>## 
@@ -241,21 +253,21 @@ t.test(x ~ grp, data = dat)
 
 <p>If the prior settings are consistent, then all three of these numbers should be the same.</p>
 
-<pre><code class="r">as.vector(ttestBF(formula = x ~ grp, data = dat))
+<pre><code class="r">as.vector(ttestBF(formula = x ~ grp, data=dat))
 </code></pre>
 
 <pre><code>## Alt., r=0.707 
 ##        0.4306
 </code></pre>
 
-<pre><code class="r">as.vector(anovaBF(x ~ grp, data = dat))
+<pre><code class="r">as.vector(anovaBF(x~grp, data=dat))
 </code></pre>
 
 <pre><code>##    grp 
 ## 0.4306
 </code></pre>
 
-<pre><code class="r">as.vector(generalTestBF(x ~ grp, data = dat))
+<pre><code class="r">as.vector(generalTestBF(x~grp, data=dat))
 </code></pre>
 
 <pre><code>##    grp 
@@ -268,14 +280,13 @@ t.test(x ~ grp, data = dat)
 
 <pre><code class="r"># create some data
 id = rnorm(10)
-eff = c(-1, 1) * 1
-effCross = outer(id, eff, &quot;+&quot;) + rnorm(length(id) * 2)
-dat = data.frame(x = as.vector(effCross), id = factor(1:10), grp = factor(rep(1:2, 
-    each = length(id))))
-dat$forReg = as.numeric(dat$grp) - 1.5
-idOnly = lmBF(x ~ id, data = dat, whichRandom = &quot;id&quot;)
+eff = c(-1,1)*1
+effCross = outer(id,eff,&#39;+&#39;)+rnorm(length(id)*2)
+dat = data.frame(x=as.vector(effCross),id=factor(1:10), grp=factor(rep(1:2,each=length(id))))
+dat$forReg = as.numeric(dat$grp)-1.5
+idOnly = lmBF(x~id, data=dat, whichRandom=&quot;id&quot;)
 
-summary(aov(x ~ grp + Error(id/grp), data = dat))
+summary(aov(x~grp+Error(id/grp),data=dat))
 </code></pre>
 
 <pre><code>## 
@@ -293,14 +304,14 @@ summary(aov(x ~ grp + Error(id/grp), data = dat))
 
 <p>If the prior settings are consistent, these two numbers should be almost the same (within MC estimation error).</p>
 
-<pre><code class="r">as.vector(lmBF(x ~ grp + id, data = dat, whichRandom = &quot;id&quot;)/idOnly)
+<pre><code class="r">as.vector(lmBF(x ~ grp+id, data=dat, whichRandom=&quot;id&quot;)/idOnly)
 </code></pre>
 
 <pre><code>## grp + id 
 ##    23.14
 </code></pre>
 
-<pre><code class="r">as.vector(lmBF(x ~ forReg + id, data = dat, whichRandom = &quot;id&quot;)/idOnly)
+<pre><code class="r">as.vector(lmBF(x ~ forReg+id, data=dat, whichRandom=&quot;id&quot;)/idOnly)
 </code></pre>
 
 <pre><code>## forReg + id 
@@ -318,7 +329,7 @@ in the two-sample case, the Bayes factors should be the same for the one-sample 
 <pre><code class="r"># create some data
 tstat = 3
 NTwoSample = 500
-effSampleSize = (NTwoSample^2)/(2 * NTwoSample)
+effSampleSize = (NTwoSample^2)/(2*NTwoSample)
 effSize = tstat/sqrt(effSampleSize)
 
 # One sample
@@ -341,13 +352,12 @@ t.test(x0)
 ##    0.1897
 </code></pre>
 
-<pre><code class="r">
-# Two sample
+<pre><code class="r"># Two sample
 x1 = rnorm(NTwoSample)
 x1 = (x1 - mean(x1))/sd(x1)
 x2 = x1 + effSize
 
-t.test(x2, x1)
+t.test(x2,x1)
 </code></pre>
 
 <pre><code>## 
@@ -372,7 +382,7 @@ t.test(x2, x1)
 ##         1.723
 </code></pre>
 
-<pre><code class="r">log(as.vector(ttestBF(x = x1, y = x2)))
+<pre><code class="r">log(as.vector(ttestBF(x=x1,y=x2)))
 </code></pre>
 
 <pre><code>## Alt., r=0.707 
@@ -386,7 +396,7 @@ t.test(x2, x1)
 <p>These two Bayes factors should be lead to similar conclusions.</p>
 
 <pre><code class="r"># using the data previously defined
-t.test(x ~ grp, data = dat, paired = TRUE)
+t.test(x~grp,data=dat,paired=TRUE)
 </code></pre>
 
 <pre><code>## 
@@ -402,15 +412,14 @@ t.test(x ~ grp, data = dat, paired = TRUE)
 ##                  -2.251
 </code></pre>
 
-<pre><code class="r">
-as.vector(lmBF(x ~ grp + id, data = dat, whichRandom = &quot;id&quot;)/idOnly)
+<pre><code class="r">as.vector(lmBF(x ~ grp+id, data=dat, whichRandom=&quot;id&quot;)/idOnly)
 </code></pre>
 
 <pre><code>## grp + id 
 ##    23.14
 </code></pre>
 
-<pre><code class="r">as.vector(ttestBF(x = dat$x[dat$grp == 1], y = dat$x[dat$grp == 2], paired = TRUE))
+<pre><code class="r">as.vector(ttestBF(x=dat$x[dat$grp==1],y=dat$x[dat$grp==2],paired=TRUE))
 </code></pre>
 
 <pre><code>## Alt., r=0.707 
@@ -419,7 +428,7 @@ as.vector(lmBF(x ~ grp + id, data = dat, whichRandom = &quot;id&quot;)/idOnly)
 
 <hr/>
 
-<p><em>This document was compiled with version 0.9.7 of BayesFactor (R version 3.0.2 (2013-09-25) on x86_64-apple-darwin10.8.0).</em></p>
+<p><em>This document was compiled with version 0.9.8 of BayesFactor (R version 3.1.1 (2014-07-10) on x86_64-apple-darwin13.1.0).</em></p>
 
 </body>
 

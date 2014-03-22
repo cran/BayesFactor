@@ -1,4 +1,4 @@
-singleGBayesFactor <- function(y,X,rscale,gMap,optimLimitFactor=2){
+singleGBayesFactor <- function(y,X,rscale,gMap){
   if(ncol(X)==1){
     dat = data.frame(y=y,x=as.factor(X[,1])) 
     freqs = table(dat$x)
@@ -10,33 +10,26 @@ singleGBayesFactor <- function(y,X,rscale,gMap,optimLimitFactor=2){
     gMap = gMap + 1
     f1 = Vectorize(
       function(g,y,Xm,rscale,gMap,const){
-        Qg(log(g),y,Xm,rscale,gMap,limit=FALSE) - log(g) - const
+        exp(Qg(log(g),y,Xm,rscale,gMap,limit=FALSE) - log(g) - const)
       },"g")
-    f2 = function(...) exp(f1(...))
     
-    beta = solve(t(X)%*%X)%*%t(X)%*%y
-    resid = y - X%*%beta
-    
-    # Use estimate of g so that we can find a value near the 
-    # maximum of the function to help us renormalize it 
-    g.est = var(beta)/var(resid)
     integral = try({
-      const = optimize(f1, c(0,optimLimitFactor*g.est), y=y, 
-                       Xm=X, rscale=rscale, gMap=gMap, 
-                       const=0, maximum=TRUE)$objective
-      integrate(f2,0,Inf,y=y,Xm=X,rscale=rscale,gMap=gMap,const=const)
+      op = optim(1, Qg, control=list(fnscale=-1),gr=dQg, method="BFGS",
+                 y=y, Xm=X, rscale=rscale, gMap=gMap)
+      const = op$value - op$par
+      integrate(f1,0,Inf,y=y,Xm=X,rscale=rscale,gMap=gMap,const=const)
     })
     if(inherits(integral,"try-error")){
       return(list(bf = NA, properror = NA))
     }
-    lbf = log(integral$value) + const
+    lbf = log(integral$value)
     prop.error = exp(log(integral$abs.error) - lbf)
-    return(list(bf = lbf, properror = prop.error))
+    return(list(bf = lbf + const, properror = prop.error))
   }
 }
 
 
-doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, XtCy, ytCy, N, P, nGs, gMap, a, b, incCont, progress, pbFun)
+doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, XtCy, ytCy, N, P, nGs, gMap, a, b, incCont, progress, pbFun, callback = function(...) as.integer(0))
 {
   returnList = NULL
   simpSamples = NULL
@@ -50,7 +43,7 @@ doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, Xt
   if(method=="auto"){
     simpSamples = suppressWarnings(.Call("RjeffSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
                         P, nGs, gMap, a, b, incCont,
-                        as.integer(0), pbFun, new.env(), 
+                        as.integer(0), pbFun, callback, new.env(), 
                         package="BayesFactor"))
     simpleErr = propErrorEst(simpSamples[[2]] - nullLike)
     logAbsSimpErr = simpSamples[[1]] - nullLike + log(simpleErr) 
@@ -62,7 +55,7 @@ doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, Xt
     }else{
       impSamples = suppressWarnings(try(.Call("RimportanceSamplerNwayAov", testNsamples, XtCX, priorX, XtCy, ytCy, N, 
                          P, nGs, gMap, a, b, apx$mu, apx$sig, incCont,
-                         as.integer(0), pbFun, new.env(), 
+                         as.integer(0), pbFun, callback, new.env(), 
                          package="BayesFactor")))
       if(inherits(impSamples, "try-error")){
         method="simple"
@@ -89,7 +82,7 @@ doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, Xt
     }else{
       returnList = try(.Call("RimportanceSamplerNwayAov", iters, XtCX, priorX, XtCy, ytCy, N, 
                        P, nGs, gMap, a, b, apx$mu, apx$sig, incCont,
-                       as.integer(iters/100*progress), pbFun, new.env(), 
+                       as.integer(iters/100*progress), pbFun, callback, new.env(), 
                        package="BayesFactor"))
       if(inherits(returnList,"try-error")){
         method="simple"
@@ -100,7 +93,7 @@ doNwaySampling<-function(method, y, X, rscale, nullLike, iters, XtCX, priorX, Xt
   if(method=="simple" | is.null(returnList)){
     returnList = .Call("RjeffSamplerNwayAov", iters, XtCX, priorX, XtCy, ytCy, N, 
                         P, nGs, gMap, a, b, incCont,
-                        as.integer(iters/100*progress), pbFun, new.env(), 
+                        as.integer(iters/100*progress), pbFun, callback, new.env(), 
                         package="BayesFactor")
     
   }

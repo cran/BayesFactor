@@ -2,9 +2,9 @@
 \alias{ttestBF}
 \title{Function for Bayesian analysis of one- and two-sample designs}
 \usage{
-ttestBF(x, y = NULL, formula = NULL, mu = 0, nullInterval = NULL,
-  paired = FALSE, data = NULL, rscale = "medium", posterior = FALSE,
-  ...)
+ttestBF(x = NULL, y = NULL, formula = NULL, mu = 0,
+  nullInterval = NULL, paired = FALSE, data = NULL, rscale = "medium",
+  posterior = FALSE, callback = function(...) as.integer(0), ...)
 }
 \arguments{
   \item{x}{a vector of observations for the first (or only)
@@ -33,6 +33,9 @@ ttestBF(x, y = NULL, formula = NULL, mu = 0, nullInterval = NULL,
 
   \item{posterior}{if \code{TRUE}, return samples from the
   posterior instead of Bayes factor}
+
+  \item{callback}{callback function for third-party
+  interfaces}
 
   \item{...}{further arguments to be passed to or from
   methods.}
@@ -74,24 +77,22 @@ controls the scale of the prior distribution, with
 references below for more details.
 
 For the \code{rscale} argument, several named values are
-recognized: "medium", "wide", and "ultrawide". For the
-one-sample test, these correspond to \eqn{r} scale values
-of 1/2, \eqn{\sqrt{2}/2}{sqrt(2)/2}, and 1, respectively.
-For the two-sample test, they correspond to
-\eqn{\sqrt{2}/2}{sqrt(2)/2}, 1, and
-\eqn{\sqrt{2}/2}{sqrt(2)} respectively.
+recognized: "medium", "wide", and "ultrawide". These
+correspond to \eqn{r} scale values of
+\eqn{\sqrt{2}/2}{sqrt(2)/2}, 1, and \eqn{\sqrt{2}}{sqrt(2)}
+respectively.
 
 The Bayes factor is computed via Gaussian quadrature.
 }
 \note{
 The default priors have scale has changed from 1 to
-\eqn{\sqrt{2}/2}. The factor of \eqn{\sqrt{2}} in the
-two-sample t test is to be consistent with Morey et al.
-(2011) and Rouder et al. (2012), and the factor of
-\eqn{1/2} in both is to better scale the expected effect
-sizes; the previous scaling put more weight on larger
-effect sizes. To obtain the same Bayes factors as Rouder et
-al. (2009), change the prior scale to 1.
+\eqn{\sqrt{2}/2}. The factor of \eqn{\sqrt{2}} is to be
+consistent with Morey et al. (2011) and Rouder et al.
+(2012), and the factor of \eqn{1/2} in both is to better
+scale the expected effect sizes; the previous scaling put
+more weight on larger effect sizes. To obtain the same
+Bayes factors as Rouder et al. (2009), change the prior
+scale to 1.
 }
 \examples{
 ## Sleep data from t test example

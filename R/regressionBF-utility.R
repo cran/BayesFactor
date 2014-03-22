@@ -32,13 +32,16 @@ createFullRegressionModel <- function(formula, data){
   return(formula(strng))
 }
 
-integrand.regression=function(g,N,p,R2,rscaleSqr=1)
-{
-  a=.5*((N-p-1)*log(1+g)-(N-1)*log(1+g*(1-R2)))
-  exp(a)*dinvgamma(g,shape=.5,scale=rscaleSqr*N/2)
-}
+integrand.regression=Vectorize(function(g, N, p , R2, rscaleSqr=1, log=FALSE, log.const=0){
+  a = .5 * ((N - p -1 ) * log(1 + g) - (N - 1) * log(1 + g * (1 - R2)))
+  shape=.5
+  scale=rscaleSqr*N/2
+  log.density.igam <- dinvgamma1(g, shape, scale)
+  ans = a + log.density.igam - log.const
+  ifelse(log,ans,exp(ans))
+},"g")
 
-linearReg.Gibbs <- function(y, covariates, iterations = 10000, rscale = "medium", progress = options()$BFprogress, gibi=NULL, noSample=FALSE, ...){
+linearReg.Gibbs <- function(y, covariates, iterations = 10000, rscale = "medium", progress = options()$BFprogress, callback=function(...) as.integer(0), noSample=FALSE, ...){
   rscale = rpriorValues("regression",,rscale)
   X <- apply(covariates,2,function(v) v - mean(v))
   y = matrix(y,ncol=1)
@@ -52,12 +55,7 @@ linearReg.Gibbs <- function(y, covariates, iterations = 10000, rscale = "medium"
   
   sig2start = sum( (X%*%solve(XtCnX)%*%XtCny - Cny)^2 ) / N
   
-  if(!is.null(gibi)) {
-    progress=TRUE;
-    if(!is.function(gibi))
-      stop("Malformed GIBI argument (not a function). You should not set this argument if running oneWayAOV.Gibbs from the console.")
-  }
-  if(progress & is.null(gibi) & !noSample){
+  if(progress & !noSample){
     pb = txtProgressBar(min = 0, max = 100, style = 3) 
   }else{ 
     pb=NULL 
@@ -66,11 +64,7 @@ linearReg.Gibbs <- function(y, covariates, iterations = 10000, rscale = "medium"
   pbFun = function(samps){ 
     if(progress){
       percent = as.integer(round(samps / iterations * 100))
-      if(is.null(gibi)){
-        setTxtProgressBar(pb, percent)
-      }else{
-        gibi(percent)
-      }
+      setTxtProgressBar(pb, percent)
     }
   }
   
@@ -90,6 +84,7 @@ linearReg.Gibbs <- function(y, covariates, iterations = 10000, rscale = "medium"
                  sig2start,
                  progress,
                  pbFun,
+                 callback,
                  new.env(),
                  package="BayesFactor")
   }

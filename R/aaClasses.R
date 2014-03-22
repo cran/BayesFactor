@@ -32,6 +32,10 @@ setClass("BFmodel", representation(
   version = "character"
 ))
 
+#' @name BFcontingencyTable-class
+#' @rdname model-classes
+setClass("BFcontingencyTable", contains = "BFmodel")
+
 #' @name BFlinearModel-class
 #' @rdname model-classes
 setClass("BFlinearModel", contains = "BFmodel")
@@ -39,6 +43,10 @@ setClass("BFlinearModel", contains = "BFmodel")
 #' @name BFoneSample-class
 #' @rdname model-classes
 setClass("BFoneSample", contains = "BFlinearModel")
+
+#' @name BFoneSample-class
+#' @rdname model-classes
+setClass("BFmetat", contains = "BFmodel")
 
 #' @name BFindepSample-class
 #' @rdname model-classes

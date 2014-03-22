@@ -1,3 +1,16 @@
+  CHANGES IN BayesFactor VERSION 0.9.8
+
+CHANGES
+  *  Fixed bugs in model enumeration code
+  *  Fixed bug leading to wrong computation of number of covariate when interactions between continuous variables were included
+  *  Corrected typos/old information in the documentation 
+  *  Fixed a memory allocation bug that affected computing Bayes factors with lots of data 
+  *  Added meta-analytic Bayes factor for t tests (see meta.ttestBF)
+  *  Fixed bug in ttestBF that yielded Bayes factor of NaN for very extreme posterior interval probabilities
+  *  Fixed several bugs causing infinite integrals; generally improved integration
+  *  Added check to ensure no missing data before analyses
+  *  Added callbacks for access by third-party interfaces
+
   CHANGES IN BayesFactor VERSION 0.9.7
 
 CHANGES
