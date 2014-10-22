@@ -353,6 +353,61 @@ allBFs / max(allBFs)
 ## ----GLMplot2,echo=FALSE,fig.width=10, fig.height=5----------------------
 plot(allBFs / max(allBFs))
 
+## ----propprior,echo=FALSE,fig.width=10, fig.height=5---------------------
+p0 = .5
+rnames = c("medium","wide","ultrawide")
+r = sapply(rnames,function(rname) BayesFactor:::rpriorValues("proptest",,rname))
+leg_names = paste(rnames," (r=",round(r,3), ")", sep="")
+
+omega = seq(-5,5,len=100)
+pp = dlogis(omega,qlogis(p0),r[1])
+
+plot(omega,pp, col="black", typ = 'l', lty=1, lwd=2, ylab="Prior density", xlab=expression(paste("True log odds ", omega)), yaxt='n')
+
+pp = dlogis(omega,qlogis(p0),r[2])
+lines(omega, pp, col = "red",lty=1, lwd=2)
+
+pp = dlogis(omega,qlogis(p0),r[3])
+lines(omega, pp, col = "blue",lty=1,lwd=2)
+
+axis(3,at = -2:2 * 2, labels=round(plogis(-2:2*2),2))
+mtext(expression(paste("True probability ", pi)),3,2,adj=.5)
+
+legend(-5,.5,legend = leg_names, col=c("black","red","blue"), lwd=2,lty=1)
+
+## ------------------------------------------------------------------------
+bf = proportionBF( 682, 682 + 243, p = 3/4)
+1 / bf
+
+## ------------------------------------------------------------------------
+binom.test(682, 682 + 243, p = 3/4)
+
+## ----proppost,fig.width=10, fig.height=5---------------------------------
+chains = posterior(bf, iterations = 10000)
+plot(chains[,"p"], main = "Posterior of true probability\nof 'giant' progeny")
+
+## ----results='asis', echo=FALSE------------------------------------------
+data(raceDolls)
+kable(raceDolls)
+
+## ------------------------------------------------------------------------
+bf = contingencyTableBF(raceDolls, sampleType = "indepMulti", fixedMargin = "cols")
+bf
+
+## ------------------------------------------------------------------------
+chisq.test(raceDolls)
+
+## ------------------------------------------------------------------------
+chains = posterior(bf, iterations = 10000)
+
+## ------------------------------------------------------------------------
+sameRaceGivenWhite = chains[,"pi[1,1]"] / chains[,"pi[*,1]"]
+sameRaceGivenBlack = chains[,"pi[1,2]"] / chains[,"pi[*,2]"]
+
+
+## ----ctablechains,fig.width=10, fig.height=5-----------------------------
+plot(mcmc(sameRaceGivenWhite - sameRaceGivenBlack), main = "Increase in probability of child picking\nsame race doll (white - black)")
+
 ## ------------------------------------------------------------------------
 data(puzzles)
 

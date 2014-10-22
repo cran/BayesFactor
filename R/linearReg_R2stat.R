@@ -16,9 +16,11 @@
 ##' @param R2 proportion of variance accounted for by the predictors, excluding
 ##'   intercept
 ##' @param rscale numeric prior scale
-##' @return a vector of length 2 containing the computed log(e) Bayes factor 
-##'   (against the intercept-only null), along with a proportional error 
-##'   estimate on the Bayes factor.
+##' @param simple if \code{TRUE}, return only the Bayes factor
+##' @return If \code{simple} is \code{TRUE}, returns the Bayes factor (against the 
+##' intercept-only null). If \code{FALSE}, the function returns a 
+##' vector of length 2 containing the computed log(e) Bayes factor,
+##' along with a proportional error estimate on the Bayes factor.
 ##' @author Richard D. Morey (\email{richarddmorey@@gmail.com}) and Jeffrey N. 
 ##'   Rouder (\email{rouderj@@missouri.edu})
 ##' @keywords htest
@@ -54,8 +56,17 @@
 ##' result = linearReg.R2stat(30,1,0.6813)
 ##' exp(result[['bf']])
 
-linearReg.R2stat=function(N,p,R2,rscale="medium") {
+linearReg.R2stat=function(N,p,R2,rscale="medium", simple = FALSE) {
   rscale = rpriorValues("regression",,rscale)
+  
+  if(p<1)
+    stop("Number of predictors must be >0")
+  
+  if(p>=(N-1))
+    stop("Number of predictors must be less than N - 1 (number of data points minus 1).")
+  
+  if( (R2>=1) | (R2<0) )
+    stop("Illegal R2 value (must be 0 <= R2 < 1)")
   
   ### Compute approximation to posterior mode of g
   ### Liang et al Eq. A.3, assuming a=b=0
@@ -72,5 +83,9 @@ linearReg.R2stat=function(N,p,R2,rscale="medium") {
   h=integrate(integrand.regression,lower=0,upper=Inf,N=N,p=p,R2=R2,rscaleSqr=rscale^2,log.const=log.const)
   properror = exp(log(h[[2]]) - log(h[[1]]))
   bf = log(h$value) + log.const
-  return(c(bf=bf, properror=properror))
+  if(simple){
+    return(c(B10=exp(bf)))
+  }else{
+    return(c(bf=bf, properror=properror))
+  }  
 }

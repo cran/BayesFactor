@@ -1,3 +1,19 @@
+  CHANGES IN BayesFactor VERSION 0.9.9
+
+CHANGES
+  *  Added "simple" argument to ttest.tstat, oneWayAOV.Fstat, and linearReg.R2stat; when TRUE, return only the Bayes factor (not the log BF and error)
+  *  When sampling Bayes factors, recompute() now increases the precision of BayesFactor objects, rather than simply recomputing them. Precision from new samples is added
+  *  Added test for single proportion; see proportionBF()
+  *  Added support for contingency tables; see contingencyBF()
+  *  Added Hraba and Grant (1970) data set; see ?raceDolls
+  *  Added model.matrix method for BayesFactor objects; allows for extracting the design matrix used for an analysis
+  *  recompute() now has multicore and callback support, as intended
+  *  Refactored t test and meta-t test code
+  *  Moved many backend functions to Rcpp from R C API
+  *  t test samplers now sample from interval null hypotheses and point null hypotheses where appropriate
+  *  fixed bug in in meta t test sampler which wouldn't allow sampling small numbers of MCMC samples
+
+
   CHANGES IN BayesFactor VERSION 0.9.8
 
 CHANGES

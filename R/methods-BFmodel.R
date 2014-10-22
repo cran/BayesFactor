@@ -6,8 +6,20 @@ BFmodel <- function(type, identifier, prior, dataTypes, shortName, longName){
       dataTypes = dataTypes,
       shortName = shortName,
       longName = longName,
+      analysis = list(),
       version = BFInfo(FALSE))
 }
+
+BFproportion <- function(type, identifier, prior, shortName, longName){
+  new("BFproportion", type = type,
+      identifier = identifier,
+      prior = prior,
+      shortName = shortName,
+      longName = longName,
+      analysis = list(),
+      version = BFInfo(FALSE))
+}
+
 
 BFcontingencyTable <- function(type, identifier, prior, shortName, longName){
   new("BFcontingencyTable", type = type,
@@ -15,6 +27,7 @@ BFcontingencyTable <- function(type, identifier, prior, shortName, longName){
       prior = prior,
       shortName = shortName,
       longName = longName,
+      analysis = list(),
       version = BFInfo(FALSE))
 }
 
@@ -25,6 +38,7 @@ BFlinearModel <- function(type, identifier, prior, dataTypes, shortName, longNam
       dataTypes = dataTypes,
       shortName = shortName,
       longName = longName,
+      analysis = list(),
       version = BFInfo(FALSE))
 }
 
@@ -34,6 +48,7 @@ BFoneSample <- function(type, identifier, prior, shortName, longName){
       prior = prior,
       shortName = shortName,
       longName = longName,
+      analysis = list(),
       version = BFInfo(FALSE))
 }
 
@@ -43,6 +58,7 @@ BFindepSample <- function(type, identifier, prior, shortName, longName){
       prior = prior,
       shortName = shortName,
       longName = longName,
+      analysis = list(),
       version = BFInfo(FALSE))
 }
 
@@ -52,6 +68,7 @@ BFmetat <- function(type, identifier, prior, shortName, longName){
       prior = prior,
       shortName = shortName,
       longName = longName,
+      analysis = list(),
       version = BFInfo(FALSE))
 }
 
@@ -68,7 +85,7 @@ setMethod('show', signature = c("BFlinearModel"),
   }
 )
 
-setMethod('show', signature = c("BFmetat"),
+setMethod('show', signature = c("BFmodel"),
           function(object){
             cat("---\n Model:\n")
             cat("Type: ",class(object)[1],", ",object@type,"\n",sep="")
@@ -84,8 +101,8 @@ setMethod("%same%", signature = c(x="BFmodel",y="BFmodel"),
             slotSame = sapply(slotNames(x), function(el,x,y) identical(slot(x,el),slot(y,el)),
                    x=x,y=y)
             slotSame["dataTypes"] = ifelse(length(dataTypeSame)>0,dataTypeSame, TRUE)
-            # exclude version
-            slotSame = slotSame[names(slotSame)!="version"]
+            # exclude version and analysis
+            slotSame = slotSame[ !( names(slotSame) %in% c("version", "analysis") ) ]
             return(all(slotSame) & classesSame)
           })
 
@@ -122,22 +139,14 @@ setMethod('compare', signature(numerator = "BFoneSample", denominator = "missing
                 errorEst = 0
               }else{
                 t = (mean(y) - mu) / sd(y) * sqrt(N)
-                bf = ttest.tstat(t=t, n1=N,nullInterval=nullInterval,rscale=numerator@prior$rscale)
+                complement = ifelse(!is.null(attr(nullInterval,"complement")),TRUE,FALSE)
+                bf = ttest.tstat(t=t, n1=N,nullInterval=nullInterval,rscale=numerator@prior$rscale,complement=complement)
                 numBF = bf[['bf']]
                 errorEst = bf[['properror']]
               }
-              if(!is.null(nullInterval)){
-
-                modComplement = numerator
-                modComplement@shortName = paste("Alt., r=",round(numerator@prior$rscale,3)," !(",nullInterval[1],"<d<",nullInterval[2],")",sep="")
-                modComplement@longName = paste("Alternative, r = ",numerator@prior$rscale,", mu =/= ",mu, " !(",nullInterval[1],"<d<",nullInterval[2],")",sep="")
+              numList = list(numerator)
+              nms = numerator@shortName
               
-                numList = list(numerator,modComplement)
-                nms = c(numerator@shortName,modComplement@shortName)
-              }else{
-                numList = list(numerator)
-                nms = numerator@shortName
-              }
               modDenominator = BFoneSample(type = "JZS", 
                                    identifier = list(formula = "y ~ 0"), 
                                    prior=list(mu=mu),
@@ -173,8 +182,13 @@ setMethod('compare', signature(numerator = "BFindepSample", denominator = "missi
             factor = fmlaFactors(formula, data)[-1]
                         
             y = data[[dv]]
-            iv = data[[factor]]
-            ns = table(iv)
+            if(!is.null(factor)){
+              iv = data[[factor]]
+              ns = table(iv)
+            }else{
+              iv = NULL
+              ns = NULL
+            }
             
             mu = numerator@prior$mu
             nullInterval=numerator@prior$nullInterval
@@ -187,24 +201,18 @@ setMethod('compare', signature(numerator = "BFindepSample", denominator = "missi
                 errorEst = 0
               }else{
                 t = t.test(formula = formula,data=data, var.eq=TRUE)$statistic
-                bf = ttest.tstat(t=t, n1=ns[1], n2=ns[2], nullInterval=nullInterval,rscale=numerator@prior$rscale)
+                complement = ifelse(!is.null(attr(nullInterval,"complement")),TRUE,FALSE)
+                bf = ttest.tstat(t=t, n1=ns[1], n2=ns[2], nullInterval=nullInterval,rscale=numerator@prior$rscale, complement = complement)
                 numBF = bf[['bf']]
                 errorEst = bf[['properror']]
               }
-              if(!is.null(nullInterval)){
-                
-                modComplement = numerator
-                modComplement@shortName = paste("Alt., r=",round(numerator@prior$rscale,3)," !(",nullInterval[1],"<d<",nullInterval[2],")",sep="")
-                modComplement@longName = paste("Alternative, r = ",numerator@prior$rscale,", mu1-mu2 =/= ",mu, " !(",nullInterval[1],"<d<",nullInterval[2],")",sep="")
-                
-                numList = list(numerator,modComplement)
-                nms = c(numerator@shortName,modComplement@shortName)
-              }else{
-                numList = list(numerator)
-                nms = numerator@shortName
-              }
+              numList = list(numerator)
+              nms = numerator@shortName
+      
+              nullFormula = paste(formula[[2]],"1",sep=" ~ ")
+              
               modDenominator = BFindepSample(type = "JZS", 
-                                             identifier = list(formula = "y ~ 1"), 
+                                             identifier = list(formula = nullFormula), 
                                              prior=list(mu=mu),
                                              shortName = paste("Null, mu1-mu2=",mu,sep=""),
                                              longName = paste("Null, mu1-mu2 = ",mu, sep="")
@@ -236,29 +244,67 @@ setMethod('compare', signature(numerator = "BFmetat", denominator = "missing", d
             nullInterval=numerator@prior$nullInterval
 
             if( (numerator@type=="JZS") ){
-              
+              if( numerator@identifier$formula=="d = 0" ){
+                numBF = 0
+                errorEst = 0
+              }else{
+                complement = ifelse(!is.null(attr(nullInterval,"complement")),TRUE,FALSE)
                 bf = meta.ttest.tstat(t=data$t, n1=data$n1, n2=data$n2, 
-                                      nullInterval=nullInterval, rscale=numerator@prior$rscale)
+                                    nullInterval=nullInterval, rscale=numerator@prior$rscale,complement=complement)
                 numBF = bf[['bf']]
                 errorEst = bf[['properror']]
-  
-              if(!is.null(nullInterval)){
-                
-                modComplement = numerator
-                modComplement@shortName = paste("Alt., r=",round(numerator@prior$rscale,3)," !(",nullInterval[1],"<d<",nullInterval[2],")",sep="")
-                modComplement@longName = paste("Alternative, r = ",numerator@prior$rscale," !(",nullInterval[1],"<d<",nullInterval[2],")",sep="")
-                
-                numList = list(numerator,modComplement)
-                nms = c(numerator@shortName,modComplement@shortName)
-              }else{
-                numList = list(numerator)
-                nms = numerator@shortName
               }
+              numList = list(numerator)
+              nms = numerator@shortName
+              
               modDenominator = BFmetat(type = "JZS", 
                                            identifier = list(formula = "d = 0"), 
                                            prior=list(),
                                            shortName = "Null, d=0",
                                            longName = "Null, d = 0")
+              
+              bf_df = data.frame(bf = numBF,
+                               error = errorEst,
+                               time = date(),
+                               code = randomString(length(numBF)))
+              
+            rownames(bf_df) <- nms
+              
+            newBF = BFBayesFactor(numerator = numList,
+                                  denominator = modDenominator,
+                                  data = data,
+                                  bayesFactor = bf_df)
+            return(newBF)
+          }else{
+            stop("Unknown prior type: ", numerator@type)
+          }
+})
+
+setMethod('compare', signature(numerator = "BFproportion", denominator = "missing", data = "data.frame"), 
+          function(numerator, data, ...){
+            
+            nullInterval=numerator@prior$nullInterval
+            
+            if( (numerator@type=="logistic") ){
+              if( numerator@identifier$formula=="p = p0" ){
+                numBF = 0
+                errorEst = 0
+              }else{
+                complement = ifelse(!is.null(attr(nullInterval,"complement")),TRUE,FALSE)
+                bf = prop.test.bf(y=data$y, N=data$N, p=numerator@prior$p0, 
+                                  rscale=numerator@prior$rscale, nullInterval, 
+                                  complement = complement)  
+                numBF = bf[['bf']]
+                errorEst = bf[['properror']]
+              }
+              numList = list(numerator)
+              nms = numerator@shortName
+              
+              modDenominator = BFproportion(type = "logistic", 
+                                       identifier = list(formula = "p = p0",p0=numerator@prior$p0), 
+                                       prior=list(p0=numerator@prior$p0),
+                                       shortName = paste("Null, p=",round(numerator@prior$p0,3),sep=""),
+                                       longName = paste("Null, p = ", numerator@prior$p0, sep=""))
               
               bf_df = data.frame(bf = numBF,
                                  error = errorEst,
@@ -278,29 +324,40 @@ setMethod('compare', signature(numerator = "BFmetat", denominator = "missing", d
           })
 
 
+
 setMethod('compare', signature(numerator = "BFcontingencyTable", denominator = "missing", data = "data.frame"), 
           function(numerator, data, ...){
             
             type = numerator@type
             a = numerator@prior$a
-            
+            marg = numerator@prior$fixedMargin
+            data2 = as.matrix(data)
+            if( !is.null(marg) )
+              if( ( marg == "cols" ) & ( type == "independent multinomial" ) ) 
+                data2 = t(data2)
+              
             if(any(data%%1 != 0)) stop("All elements of x must be integers.")
             if(any(dim(data)<2) | (length(dim(data)) != 2)) stop("x must be m by n.")
             
-            lbf = switch(type,
-                         "poisson" = contingencyPoisson(as.matrix(data), a),
-                         "joint multinomial" = contingencyJointMultinomial(as.matrix(data), a),
-                         "independent multinomial" = contingencyIndepMultinomial(as.matrix(data), a),
-                         "hypergeometric" =  contingencyHypergeometric(as.matrix(data), a),
+            if(numerator@identifier$formula == "independence"){
+              lbf = 0
+              error = 0
+            }else{
+              lbf = switch(type,
+                         "poisson" = contingencyPoisson(as.matrix(data2), a),
+                         "joint multinomial" = contingencyJointMultinomial(as.matrix(data2), a),
+                         "independent multinomial" = contingencyIndepMultinomial(as.matrix(data2), a),
+                         "hypergeometric" =  contingencyHypergeometric(as.matrix(data2), a),
                          stop("Unknown value of sampleType (see help for contingencyBF).")
-            )
-            error = 0
+              )
+              error = 0
+            }
             
             denominator = BFcontingencyTable(type = type, 
                                              identifier = list(formula = "independence"), 
-                                             prior=list(),
-                                             shortName = "Indep.",
-                                             longName = "Null, independence")
+                                             prior=numerator@prior,
+                                             shortName = paste0("Indep. (a=",a,")"),
+                                             longName = paste0("Null, independence, a = ", a))
             
             bf_df = data.frame(bf = lbf,
                                error = error,

@@ -17,12 +17,12 @@
 ##' @param n2 size of second group, for independent-groups tests
 ##' @param nullInterval optional vector of length 2 containing lower and upper bounds of an interval hypothesis to test, in standardized units
 ##' @param rscale numeric prior scale
-##' @return If \code{nullInterval} is defined, then two Bayes factors will be
-##'   computed: The Bayes factor for the interval against the null hypothesis 
-##'   that the standardized effect is 0, and the corresponding Bayes factor for 
-##'   the compliment of the interval. For each Bayes factor, a vector of length
-##'   2 containing the computed log(e) Bayes factor (against the point null),
-##'   along with a proportional error estimate on the Bayes factor is returned.
+##' @param complement if \code{TRUE}, compute the Bayes factor against the complement of the interval
+##' @param simple if \code{TRUE}, return only the Bayes factor
+##' @return If \code{simple} is \code{TRUE}, returns the Bayes factor (against the 
+##' null). If \code{FALSE}, the function returns a 
+##' vector of length 2 containing the computed log(e) Bayes factor,
+##' along with a proportional error estimate on the Bayes factor.
 ##' @author Richard D. Morey (\email{richarddmorey@@gmail.com}) and Jeffrey N. 
 ##'   Rouder (\email{rouderj@@missouri.edu})
 ##' @keywords htest
@@ -33,6 +33,11 @@
 ##'   Rouder, J. N., Speckman, P. L., Sun, D., Morey, R. D., & Iverson, G. 
 ##'   (2009). Bayesian t-tests for accepting and rejecting the null hypothesis. 
 ##'   Psychonomic Bulletin & Review, 16, 752-760
+##' @note In version 0.9.9, the behaviour of this function has changed in order to produce more uniform results. In
+##' version 0.9.8 and before, this function returned two Bayes factors when \code{nullInterval} was 
+##' non-\code{NULL}: the Bayes factor for the interval versus the null, and the Bayes factor for the complement of 
+##' the interval versus the null. Starting in version 0.9.9, in order to get the Bayes factor for the complement, it is required to
+##' set the \code{complement} argument to \code{TRUE}, and the function only returns one Bayes factor.  
 ##' @seealso \code{\link{integrate}}, \code{\link{t.test}}; see 
 ##'   \code{\link{ttestBF}} for the intended interface to this function, using 
 ##'   the full data set.
@@ -48,7 +53,7 @@
 ##' result <- ttest.tstat(t = -4.0621, n1 = 10)
 ##' exp(result[['bf']])
 
-ttest.tstat=function(t,n1,n2=0,nullInterval=NULL,rscale="medium")
+ttest.tstat=function(t,n1,n2=0,nullInterval=NULL,rscale="medium", complement=FALSE, simple = FALSE)
 {
   if(n2){
     rscale = rpriorValues("ttestTwo",,rscale)
@@ -60,11 +65,25 @@ ttest.tstat=function(t,n1,n2=0,nullInterval=NULL,rscale="medium")
   
   nu=ifelse(n2==0 | is.null(n2),n1-1,n1+n2-2)
   n=ifelse(n2==0 | is.null(n2),n1,(n1*n2)/(n1+n2))
+  
+  if( (n < 1) | (nu < 1))
+    stop("not enough observations")
+  
+  if(is.infinite(t))
+    stop("data are essentially constant")
+  
   r2=rscale^2
   log.marg.like.0= -(nu+1)/2 * log(1+t^2/(nu))
   if(is.null(nullInterval)){
-    return(meta.t.bf(t,n,nu,rscale=rscale))
+    res = meta.t.bf(t,n,nu,rscale=rscale)
   }else{
-    return(meta.t.bf(t,n,nu,interval=nullInterval,rscale=rscale))
+    res = meta.t.bf(t,n,nu,interval=nullInterval,rscale=rscale,complement = complement)
   }
+  if(simple){
+    return(c(B10=exp(res$bf)))
+  }else{
+    return(res)
+  }
+  
+  
 }

@@ -101,7 +101,7 @@
 ##' 
 ##' ## (log) Bayes factor of full model against grand-mean only model
 ##' bf.full <- nWayAOV(y = sleep$extra, X = X, struc = c(1,10), rscale=c(.5,1))
-##' exp(bf.full['bf'])
+##' exp(bf.full[['bf']])
 ##' 
 ##' ## Compare with lmBF result (should be about the same, give or take 1%)
 ##' bf.full2 <- lmBF(extra ~ group + ID, data = sleep, whichRandom = "ID")
@@ -175,8 +175,8 @@ nWayAOV<- function(y, X, struc = NULL, gMap = NULL, rscale, iterations = 10000, 
                                  rscale = rscale, progress = progress, callback = callback)
         return(chains)
       }else{
-        R2 = t(y)%*%X%*%solve(t(X)%*%X)%*%t(X)%*%y / (t(y)%*%y)
-        bf = linearReg.R2stat(N=N,p=ncol(X),R2=R2,rscale=rscale)  
+        R2 = t(Cy)%*%CX%*%solve(t(CX)%*%CX)%*%t(CX)%*%Cy / (t(Cy)%*%Cy)
+        bf = linearReg.R2stat(N=N,p=ncol(CX),R2=R2,rscale=rscale)  
         return(bf)
       }
     } 
