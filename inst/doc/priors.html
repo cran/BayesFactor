@@ -242,13 +242,13 @@ t.test(x ~ grp, data=dat)
 ##  Welch Two Sample t-test
 ## 
 ## data:  x by grp
-## t = 0.4758, df = 17.44, p-value = 0.6401
+## t = 0.476, df = 17.4, p-value = 0.6401
 ## alternative hypothesis: true difference in means is not equal to 0
 ## 95 percent confidence interval:
-##  -0.7927  1.2555
+##  -0.793  1.255
 ## sample estimates:
 ## mean in group 1 mean in group 2 
-##          0.4112          0.1798
+##           0.411           0.180
 </code></pre>
 
 <p>If the prior settings are consistent, then all three of these numbers should be the same.</p>
@@ -257,21 +257,21 @@ t.test(x ~ grp, data=dat)
 </code></pre>
 
 <pre><code>## Alt., r=0.707 
-##        0.4306
+##         0.431
 </code></pre>
 
 <pre><code class="r">as.vector(anovaBF(x~grp, data=dat))
 </code></pre>
 
-<pre><code>##    grp 
-## 0.4306
+<pre><code>##   grp 
+## 0.431
 </code></pre>
 
 <pre><code class="r">as.vector(generalTestBF(x~grp, data=dat))
 </code></pre>
 
-<pre><code>##    grp 
-## 0.4306
+<pre><code>##   grp 
+## 0.431
 </code></pre>
 
 <h2>Regression and ANOVA</h2>
@@ -308,14 +308,14 @@ summary(aov(x~grp+Error(id/grp),data=dat))
 </code></pre>
 
 <pre><code>## grp + id 
-##    23.14
+##     23.1
 </code></pre>
 
 <pre><code class="r">as.vector(lmBF(x ~ forReg+id, data=dat, whichRandom=&quot;id&quot;)/idOnly)
 </code></pre>
 
 <pre><code>## forReg + id 
-##       23.19
+##        23.2
 </code></pre>
 
 <h2>Independent t test and paired t test</h2>
@@ -346,10 +346,10 @@ t.test(x0)
 ## t = 3, df = 249, p-value = 0.002974
 ## alternative hypothesis: true mean is not equal to 0
 ## 95 percent confidence interval:
-##  0.06517 0.31430
+##  0.0652 0.3143
 ## sample estimates:
 ## mean of x 
-##    0.1897
+##      0.19
 </code></pre>
 
 <pre><code class="r"># Two sample
@@ -367,10 +367,10 @@ t.test(x2,x1)
 ## t = 3, df = 998, p-value = 0.002767
 ## alternative hypothesis: true difference in means is not equal to 0
 ## 95 percent confidence interval:
-##  0.06563 0.31385
+##  0.0656 0.3138
 ## sample estimates:
 ## mean of x mean of y 
-## 1.897e-01 4.983e-18
+##  1.90e-01  4.98e-18
 </code></pre>
 
 <p>These (log) Bayes factors should be approximately the same. </p>
@@ -379,14 +379,14 @@ t.test(x2,x1)
 </code></pre>
 
 <pre><code>## Alt., r=0.707 
-##         1.723
+##          1.72
 </code></pre>
 
 <pre><code class="r">log(as.vector(ttestBF(x=x1,y=x2)))
 </code></pre>
 
 <pre><code>## Alt., r=0.707 
-##         1.769
+##          1.77
 </code></pre>
 
 <h2>Paired samples and ANOVA</h2>
@@ -403,20 +403,20 @@ t.test(x~grp,data=dat,paired=TRUE)
 ##  Paired t-test
 ## 
 ## data:  x by grp
-## t = -4.136, df = 9, p-value = 0.002536
+## t = -4.14, df = 9, p-value = 0.002536
 ## alternative hypothesis: true difference in means is not equal to 0
 ## 95 percent confidence interval:
-##  -3.482 -1.020
+##  -3.48 -1.02
 ## sample estimates:
 ## mean of the differences 
-##                  -2.251
+##                   -2.25
 </code></pre>
 
 <pre><code class="r">as.vector(lmBF(x ~ grp+id, data=dat, whichRandom=&quot;id&quot;)/idOnly)
 </code></pre>
 
 <pre><code>## grp + id 
-##    23.14
+##     23.1
 </code></pre>
 
 <pre><code class="r">as.vector(ttestBF(x=dat$x[dat$grp==1],y=dat$x[dat$grp==2],paired=TRUE))
@@ -428,7 +428,7 @@ t.test(x~grp,data=dat,paired=TRUE)
 
 <hr/>
 
-<p><em>This document was compiled with version 0.9.9 of BayesFactor (R version 3.1.1 (2014-07-10) on x86_64-apple-darwin13.1.0).</em></p>
+<p><em>This document was compiled with version 0.9.10 of BayesFactor (R version 3.1.2 (2014-10-31) on x86_64-apple-darwin13.4.0).</em></p>
 
 </body>
 

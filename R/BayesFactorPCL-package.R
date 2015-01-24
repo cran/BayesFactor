@@ -8,7 +8,7 @@
 #'regression, and contingency tables.
 #'
 #'\tabular{ll}{ Package: \tab BayesFactor\cr Type: \tab Package\cr Version: \tab
-#'0.9.9\cr Date: \tab 2014-10-22\cr License: \tab GPL 2.0\cr LazyLoad: \tab 
+#'0.9.10\cr Date: \tab 2015-1-24\cr License: \tab GPL 2.0\cr LazyLoad: \tab 
 #'yes\cr } The following methods are currently implemented, with more to follow:
 #'
 #'general linear models (including linear mixed effects models): \code{\link{generalTestBF}}, \code{\link{lmBF}}
@@ -45,7 +45,7 @@
 #'  
 #'  Rouder, J. N., Speckman, P. L., Sun, D., Morey, R. D., \& Iverson, G. 
 #'  (2009). Bayesian t-tests for accepting and rejecting the null hypothesis. 
-#'  Psychonomic Bulletin & Review, 16, 752-760
+#'  Psychonomic Bulletin & Review, 16, 225-237
 #'  
 #'  Rouder, J. N., Morey, R. D., Speckman, P. L., Province, J. M., (2012) 
 #'  Default Bayes Factors for ANOVA Designs. Journal of Mathematical Psychology.

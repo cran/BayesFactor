@@ -75,8 +75,8 @@ meta.t.bf <- function(t,N,df,interval=NULL,rscale, complement = FALSE){
     } 
   }else{
     logPriorProbs = pcauchy(c(-Inf,interval,Inf),scale=rscale,log.p=TRUE)
-    prior.interval1 = logExpAminusExpB(logPriorProbs[2], logPriorProbs[1])
-    prior.interval3 = logExpAminusExpB(logPriorProbs[4], logPriorProbs[3])
+    prior.interval1 = logExpXminusExpY(logPriorProbs[2], logPriorProbs[1])
+    prior.interval3 = logExpXminusExpY(logPriorProbs[4], logPriorProbs[3])
     
     prior.interval.1.3 = logMeanExpLogs(c(prior.interval1,prior.interval3)) + log(2)
     
@@ -110,11 +110,11 @@ meta.t.bf <- function(t,N,df,interval=NULL,rscale, complement = FALSE){
 meta.bf.interval <- function(lower,upper,t,N,df,rscale){
   nullLike = sum(dt(t,df,log=TRUE))
   logPriorProbs = pcauchy(c(upper,lower),scale=rscale,log.p=TRUE)
-  prior.interval = logExpAminusExpB(logPriorProbs[1], logPriorProbs[2])
+  prior.interval = logExpXminusExpY(logPriorProbs[1], logPriorProbs[2])
   delta.est = t/sqrt(N)
   mean.delta = sum((delta.est * N)/sum(N))
   log.const = meta.t.like(mean.delta,t,N,df,rscale,log=TRUE)
-  intgl = integrate(meta.t.like,lower,upper,t=t,N=N,df=df,rscale=rscale,log.const=log.const)
+  intgl = integrate(meta.t.like,lower-mean.delta,upper-mean.delta,t=t,N=N,df=df,rscale=rscale,log.const=log.const,shift=mean.delta)
   
   val = log(intgl[[1]]) + log.const - prior.interval - nullLike
   err = exp(log(intgl[[2]]) - val)
@@ -127,9 +127,9 @@ meta.bf.interval <- function(lower,upper,t,N,df,rscale){
   )
 }
 
-meta.t.like <- Vectorize(function(delta,t,N,df,rscale=1,log.const=0,log=FALSE){
+meta.t.like <- Vectorize(function(delta,t,N,df,rscale=1,log.const=0,log=FALSE,shift=0){
   ans = suppressWarnings(
-    sum(dt(t,df,ncp=delta*sqrt(N),log=TRUE)) + dcauchy(delta,scale=rscale,log=TRUE) - log.const
+    sum(dt(t,df,ncp=(delta + shift)*sqrt(N),log=TRUE)) + dcauchy(delta+shift,scale=rscale,log=TRUE) - log.const
   )
   if(log){
     return(ans)

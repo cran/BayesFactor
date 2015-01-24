@@ -32,7 +32,7 @@
 ##'   
 ##'   Rouder, J. N., Speckman, P. L., Sun, D., Morey, R. D., & Iverson, G. 
 ##'   (2009). Bayesian t-tests for accepting and rejecting the null hypothesis. 
-##'   Psychonomic Bulletin & Review, 16, 752-760
+##'   Psychonomic Bulletin & Review, 16, 225-237
 ##' @note In version 0.9.9, the behaviour of this function has changed in order to produce more uniform results. In
 ##' version 0.9.8 and before, this function returned two Bayes factors when \code{nullInterval} was 
 ##' non-\code{NULL}: the Bayes factor for the interval versus the null, and the Bayes factor for the complement of 
@@ -74,10 +74,11 @@ ttest.tstat=function(t,n1,n2=0,nullInterval=NULL,rscale="medium", complement=FAL
   
   r2=rscale^2
   log.marg.like.0= -(nu+1)/2 * log(1+t^2/(nu))
+  res = c(bf=NA, properror=NA)
   if(is.null(nullInterval)){
-    res = meta.t.bf(t,n,nu,rscale=rscale)
+    try({res = meta.t.bf(t,n,nu,rscale=rscale)})
   }else{
-    res = meta.t.bf(t,n,nu,interval=nullInterval,rscale=rscale,complement = complement)
+    try({res = meta.t.bf(t,n,nu,interval=nullInterval,rscale=rscale,complement = complement)})
   }
   if(simple){
     return(c(B10=exp(res$bf)))
