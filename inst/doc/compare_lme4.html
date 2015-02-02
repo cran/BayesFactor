@@ -341,14 +341,14 @@ t.la = system.time(bfs.la &lt;- anovaBF(y ~ A*B*C + ID, data = effects,
 </code></pre>
 
 <pre><code>##    user  system elapsed 
-##   7.072   0.106   7.632
+##   7.590   0.104   8.186
 </code></pre>
 
 <pre><code class="r">t.la
 </code></pre>
 
 <pre><code>##    user  system elapsed 
-##   1.574   0.063   1.668
+##    1.76    0.06    1.93
 </code></pre>
 
 <pre><code class="r">plot(log(extractBF(sort(bfs.is))$bf),log(extractBF(sort(bfs.la))$bf),
@@ -516,7 +516,7 @@ bfEff &lt;- colMeans(B5out[,1:10])
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
 
-<!-- Sun Feb  1 13:36:13 2015 -->
+<!-- Wed Feb  4 06:23:59 2015 -->
 
 <table border=1>
 <tr> <th>  </th> <th> lmer fixed effects </th>  </tr>
@@ -563,7 +563,7 @@ sideBySide &lt;- data.frame(BayesFactor=bfEff,lmer=reparLmer)
 
 <!-- html table generated in R 3.1.2 by xtable 1.7-4 package -->
 
-<!-- Sun Feb  1 13:36:14 2015 -->
+<!-- Wed Feb  4 06:23:59 2015 -->
 
 <table border=1>
 <tr> <th>  </th> <th> BayesFactor </th> <th> lmer </th>  </tr>
@@ -592,7 +592,7 @@ The results are quite close to one another, with a bit of Bayesian shrinkage.</p
 
 <hr/>
 
-<p><em>This document was compiled with version 0.9.10 of BayesFactor (R version 3.1.2 (2014-10-31) on x86_64-apple-darwin13.4.0).</em></p>
+<p><em>This document was compiled with version 0.9.10-1 of BayesFactor (R version 3.1.2 (2014-10-31) on x86_64-apple-darwin13.4.0).</em></p>
 
 </body>
 
