@@ -8,13 +8,15 @@ using namespace Rcpp;
 NumericMatrix gibbsOneSampleRcpp(double ybar, double s2, int N, double rscale, int iterations, bool doInterval, 
                       NumericVector interval, bool intervalCompl, bool nullModel, int progress, Function callback, double callbackInterval) 
 {
+    RNGScope scope;
+    
     // setting last_cb to the beginning of the epoch 
     // ensures that the callback is called once, first
     time_t last_cb = static_cast<time_t>(int(0));    
 
     int i = 0, whichInterval = 0, signAgree = 1;
     double meanMu, varMu, scaleSig2, scaleg;
-    double shapeSig2 = 0.5 * N  + 0.5;
+    double shapeSig2 = 0.5 * N  + 0.5 * (!nullModel);
     double sumy2 = (N - 1) * s2 + N * pow(ybar, 2);
     double rscaleSq = pow(rscale, 2);
     double intLower = 0, intUpper = 1, areaLower, areaUpper;
@@ -92,8 +94,10 @@ NumericMatrix gibbsOneSampleRcpp(double ybar, double s2, int N, double rscale, i
       }
       
       // sample sig2
-		  scaleSig2 = 0.5 * ( sumy2 - 2.0 * N * ybar * mu + (N + 1/g)*pow(mu,2) );
-      if(doInterval){
+		  scaleSig2 = 0.5 * ( sumy2 - 2.0 * N * ybar * mu );
+      if( !nullModel ) scaleSig2 += (N + 1/g)*pow(mu,2)/2;
+      
+      if(doInterval && !nullModel){
         if( !intervalCompl){
           // Interval as given
           if( signAgree ){
@@ -149,9 +153,12 @@ NumericMatrix gibbsOneSampleRcpp(double ybar, double s2, int N, double rscale, i
       }
       
   	  // sample g
-		  scaleg = 0.5 * ( pow(mu,2) / sig2 + rscaleSq );
-		  g = 1 / Rf_rgamma( 1, 1/scaleg );
-      
+      if(nullModel){
+        g = NA_REAL;
+      }else{
+        scaleg = 0.5 * ( pow(mu,2) / sig2 + rscaleSq );
+  	    g = 1 / Rf_rgamma( 0.5 * (1 + !nullModel), 1/scaleg );
+      }
       // copy to chains
       chains(i, 0) = mu;
       chains(i, 1) = sig2;

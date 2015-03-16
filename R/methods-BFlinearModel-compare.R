@@ -44,6 +44,7 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
       }else if(all(relevantDataTypes != "continuous")){
         # ANOVA or t test
         freqs <- table(data[[factors[1]]])
+        if(all(freqs==1)) stop("not enough observations")
         nLvls <- length(freqs)
         rscale = ifelse(dataTypes[factors[1]] == "fixed", rscaleFixed, rscaleRandom)              
         if( (nFactors==1) & (nLvls==2) ){
@@ -63,7 +64,7 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
                 dataTypes = dataTypes,
                 rscaleFixed = rscaleFixed,
                 rscaleRandom = rscaleRandom,
-                gibbs = FALSE, ...)
+                posterior = FALSE, ...)
         }else{ # Nothing
           stop("Too few levels in independent variable: ",factors[1])
         }
@@ -74,7 +75,7 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
                        rscaleFixed = rscaleFixed,
                        rscaleRandom = rscaleRandom,
                        rscaleCont = rscaleCont,
-                       gibbs = FALSE, ...)
+                       posterior = FALSE, ...)
       }
     }) # End try expression
     

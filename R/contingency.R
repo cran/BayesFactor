@@ -89,7 +89,7 @@ contingencyTableBF <- function(x, sampleType, fixedMargin = NULL, priorConcentra
       stop("Argument fixedMargin must be either 'rows' or 'cols'.")
     }
 
-  
+  checkCallback(callback,as.integer(0))
   numerator = switch(sampleType,
          poisson = BFcontingencyTable(type = "poisson", 
                                                identifier = list(formula = "non-independence"), 
@@ -116,9 +116,11 @@ contingencyTableBF <- function(x, sampleType, fixedMargin = NULL, priorConcentra
 
     if(posterior){
       chains = posterior(numerator, data = x, callback = callback, ...)
+      checkCallback(callback,as.integer(1000))
       return(chains)
     }else{
       bf = compare(numerator = numerator, data = x)
+      checkCallback(callback,as.integer(1000))
       return(bf)
     }
 }

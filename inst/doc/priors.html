@@ -242,7 +242,7 @@ t.test(x ~ grp, data=dat)
 ##  Welch Two Sample t-test
 ## 
 ## data:  x by grp
-## t = 0.476, df = 17.4, p-value = 0.6401
+## t = 0.5, df = 20, p-value = 0.6
 ## alternative hypothesis: true difference in means is not equal to 0
 ## 95 percent confidence interval:
 ##  -0.793  1.255
@@ -308,14 +308,14 @@ summary(aov(x~grp+Error(id/grp),data=dat))
 </code></pre>
 
 <pre><code>## grp + id 
-##     23.1
+##     23.4
 </code></pre>
 
 <pre><code class="r">as.vector(lmBF(x ~ forReg+id, data=dat, whichRandom=&quot;id&quot;)/idOnly)
 </code></pre>
 
 <pre><code>## forReg + id 
-##        23.2
+##        23.3
 </code></pre>
 
 <h2>Independent t test and paired t test</h2>
@@ -343,7 +343,7 @@ t.test(x0)
 ##  One Sample t-test
 ## 
 ## data:  x0
-## t = 3, df = 249, p-value = 0.002974
+## t = 3, df = 200, p-value = 0.003
 ## alternative hypothesis: true mean is not equal to 0
 ## 95 percent confidence interval:
 ##  0.0652 0.3143
@@ -364,13 +364,13 @@ t.test(x2,x1)
 ##  Welch Two Sample t-test
 ## 
 ## data:  x2 and x1
-## t = 3, df = 998, p-value = 0.002767
+## t = 3, df = 1000, p-value = 0.003
 ## alternative hypothesis: true difference in means is not equal to 0
 ## 95 percent confidence interval:
 ##  0.0656 0.3138
 ## sample estimates:
 ## mean of x mean of y 
-##  1.90e-01  4.98e-18
+##  1.90e-01 -9.75e-18
 </code></pre>
 
 <p>These (log) Bayes factors should be approximately the same. </p>
@@ -403,7 +403,7 @@ t.test(x~grp,data=dat,paired=TRUE)
 ##  Paired t-test
 ## 
 ## data:  x by grp
-## t = -4.14, df = 9, p-value = 0.002536
+## t = -4, df = 9, p-value = 0.003
 ## alternative hypothesis: true difference in means is not equal to 0
 ## 95 percent confidence interval:
 ##  -3.48 -1.02
@@ -416,7 +416,7 @@ t.test(x~grp,data=dat,paired=TRUE)
 </code></pre>
 
 <pre><code>## grp + id 
-##     23.1
+##     23.4
 </code></pre>
 
 <pre><code class="r">as.vector(ttestBF(x=dat$x[dat$grp==1],y=dat$x[dat$grp==2],paired=TRUE))
@@ -428,7 +428,7 @@ t.test(x~grp,data=dat,paired=TRUE)
 
 <hr/>
 
-<p><em>This document was compiled with version 0.9.10-2 of BayesFactor (R Under development (unstable) (2015-02-08 r67773) on x86_64-apple-darwin13.4.0).</em></p>
+<p><em>This document was compiled with version 0.9.11 of BayesFactor (R Under development (unstable) (2015-03-15 r67992) on x86_64-apple-darwin13.4.0).</em></p>
 
 </body>
 

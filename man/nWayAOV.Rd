@@ -4,19 +4,17 @@
 \alias{nWayAOV}
 \title{Use ANOVA design matrix to compute Bayes factors or sample posterior}
 \usage{
-nWayAOV(y, X, struc = NULL, gMap = NULL, rscale, iterations = 10000,
-  progress = options()$BFprogress, callback = NULL, gibbs = FALSE,
-  ignoreCols = NULL, thin = 1, method = "auto", continuous = FALSE,
-  noSample = FALSE)
+nWayAOV(y, X, gMap, rscale, iterations = 10000,
+  progress = options()$BFprogress, callback = function(...) as.integer(0),
+  gibbs = NULL, posterior = FALSE, ignoreCols = NULL, thin = 1,
+  method = "auto", continuous = FALSE, noSample = FALSE)
 }
 \arguments{
 \item{y}{vector of observations}
 
 \item{X}{design matrix whose number of rows match \code{length(y)}.}
 
-\item{struc}{vector grouping the columns of \code{X} (see Details).}
-
-\item{gMap}{alternative way of grouping the columns of \code{X}}
+\item{gMap}{vector grouping the columns of \code{X} (see Details).}
 
 \item{rscale}{a vector of prior scale(s) of appropriate length (see
 Details).}
@@ -28,21 +26,23 @@ factor or posterior}
 
 \item{callback}{callback function for third-party interfaces}
 
-\item{gibbs}{if \code{TRUE}, return samples from the posterior instead of a
-Bayes factor}
+\item{gibbs}{will be deprecated. See \code{posterior}}
 
-\item{ignoreCols}{if \code{NULL} and \code{gibbs=TRUE}, all parameter
+\item{posterior}{if \code{TRUE}, return samples from the posterior using
+Gibbs sampling, instead of the Bayes factor}
+
+\item{ignoreCols}{if \code{NULL} and \code{posterior=TRUE}, all parameter
 estimates are returned in the MCMC object. If not \code{NULL}, a vector of
 length P-1 (where P is number of columns in the design matrix) giving which
 effect estimates to ignore in output}
 
 \item{thin}{MCMC chain to every \code{thin} iterations. Default of 1 means
-no thinning. Only used if \code{gibbs=TRUE}}
+no thinning. Only used if \code{posterior=TRUE}}
 
-\item{method}{the integration method (only valid if \code{gibbs=TRUE}); one
+\item{method}{the integration method (only valid if \code{posterior=FALSE}); one
 of "simple", "importance", "laplace", or "auto"}
 
-\item{continuous}{either FALSE is no continuous covariates are included, or
+\item{continuous}{either FALSE if no continuous covariates are included, or
 a logical vector of length equal to number of columns of X indicating
 which columns of the design matrix represent continuous covariates}
 
@@ -68,12 +68,9 @@ the other functions in this package provide. See \code{\link{lmBF}} for a
 user-friendly front-end to this function. Details about the priors can be
 found in the help for \code{\link{anovaBF}} and the references therein.
 
-Arguments \code{struc} and \code{gMap} provide a way of grouping columns of
+Argument \code{gMap} provides a way of grouping columns of
 the design matrix as a factor; the effects in each group will share a common
-\eqn{g} parameter. Only one of these arguments is needed; if both are given,
-\code{gMap} takes precedence.
-
-\code{gMap} should be a vector of the same length as the number of
+\eqn{g} parameter. \code{gMap} should be a vector of the same length as the number of
 nonconstant rows in \code{X}. It will contain all integers from 0 to
 \eqn{N_g-1}{Ng-1}, where \eqn{N_g}{Ng} is the total number of \eqn{g}
 parameters. Each element of \code{gMap} specifies the group to which that
@@ -82,8 +79,7 @@ column belongs.
 If all columns belonging to a group are adjacent, \code{struc} can instead
 be used to compactly represent the groupings. \code{struc} is a vector of
 length \eqn{N_g}{Ng}. Each element specifies the number columns in the
-group. \code{gMap} is thus the \code{\link{inverse.rle}} of \code{struc},
-minus 1.
+group.
 
 The vector \code{rscale} should be of length \eqn{N_g}{Ng}, and contain the
 prior scales of the standardized effects. See Rouder et al. (2012) for more
@@ -104,6 +100,10 @@ number of initial test iterations is determined by
 If posterior samples are requested, the posterior is sampled with a Gibbs
 sampler.
 }
+\note{
+Argument \code{struc} has been deprecated. Use \code{gMap}, which is the \code{\link{inverse.rle}} of \code{struc},
+minus 1.
+}
 \examples{
 ## Classical example, taken from t.test() example
 ## Student's sleep data
@@ -120,7 +120,7 @@ subject.matrix <- model.matrix(~sleep$ID - 1,data=sleep$ID)
 X <- cbind(group.column, subject.matrix)
 
 ## (log) Bayes factor of full model against grand-mean only model
-bf.full <- nWayAOV(y = sleep$extra, X = X, struc = c(1,10), rscale=c(.5,1))
+bf.full <- nWayAOV(y = sleep$extra, X = X, gMap = c(0,rep(1,10)), rscale=c(.5,1))
 exp(bf.full[['bf']])
 
 ## Compare with lmBF result (should be about the same, give or take 1\%)

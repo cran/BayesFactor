@@ -8,6 +8,7 @@ using namespace Rcpp;
 NumericMatrix gibbsTwoSampleRcpp(NumericVector ybar, NumericVector s2, NumericVector N, double rscale, int iterations, bool doInterval, 
                       NumericVector interval, bool intervalCompl, bool nullModel, int progress, Function callback, double callbackInterval) 
 {
+    RNGScope scope;
     
     // setting last_cb to the beginning of the epoch 
     // ensures that the callback is called once, first
@@ -15,7 +16,7 @@ NumericMatrix gibbsTwoSampleRcpp(NumericVector ybar, NumericVector s2, NumericVe
     
     int i = 0, whichInterval = 0, signAgree = 1;
     double meanMu, varMu, meanBeta, varBeta, scaleSig2, scaleg;
-    double shapeSig2 = 0.5 * sum(N) + 0.5;
+    double shapeSig2 = 0.5 * sum(N) + 0.5 * (!nullModel);
     double rscaleSq = pow(rscale, 2);
     double intLower = 0, intUpper = 1, areaLower, areaUpper;
 
@@ -47,7 +48,6 @@ NumericMatrix gibbsTwoSampleRcpp(NumericVector ybar, NumericVector s2, NumericVe
     double g = pow(beta, 2) / sig2 + 1;
     
     if(nullModel) beta = 0;
-
     
     // create progress bar
     class Progress p(iterations, (bool) progress);
@@ -113,9 +113,10 @@ NumericMatrix gibbsTwoSampleRcpp(NumericVector ybar, NumericVector s2, NumericVe
       
       // sample sig2
 		  scaleSig2 = 0.5 * ( sumySq - 2.0 * mu * sumy - beta * diffy +
-                          N[0] * pow(mu - beta/2, 2) + N[1] * pow(mu + beta/2, 2) +
-                          pow(beta, 2) / g );
-      if(doInterval){
+                          N[0] * pow(mu - beta/2, 2) + N[1] * pow(mu + beta/2, 2) );
+      if(!nullModel) scaleSig2 += pow(beta, 2) / g / 2;
+      
+      if(doInterval && !nullModel){
         if( !intervalCompl){
           // Interval as given
           if( signAgree ){
@@ -172,8 +173,11 @@ NumericMatrix gibbsTwoSampleRcpp(NumericVector ybar, NumericVector s2, NumericVe
       
   	  // sample g
 		  scaleg = 0.5 * ( pow(beta,2) / sig2 + rscaleSq );
-		  g = 1 / Rf_rgamma( 1, 1/scaleg );
-      
+		  if(nullModel){
+		    g = NA_REAL;
+      }else{
+        g = 1 / Rf_rgamma( 0.5 * (1 + !nullModel), 1/scaleg );
+		  }
       // copy to chains
       chains(i, 0) = mu;
       chains(i, 1) = beta;
