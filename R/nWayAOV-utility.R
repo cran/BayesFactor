@@ -29,18 +29,18 @@ singleGBayesFactor <- function(y,X,rscale,gMap,incCont){
         exp(Qg(log(g), ..., limit=FALSE) - log(g) - const)
       },"g")
     
-    integral = try({
+    integral = BFtry({
       op = optim(0, Qg, control=list(fnscale=-1),gr=dQg, method="BFGS",
                  sumSq=sumSq,N=N,XtCnX=XtCnX,CnytCnX=CnytCnX, rscale=rscale, gMap=gMap, gMapCounts=gMapCounts,priorX=priorX,incCont=incCont)
       const = op$value - op$par
       integrate(f1,0,Inf,sumSq=sumSq,N=N,XtCnX=XtCnX,CnytCnX=CnytCnX,rscale=rscale,gMap=gMap,gMapCounts=gMapCounts,const=const,priorX=priorX,incCont=incCont)
     })
     if(inherits(integral,"try-error")){
-      return(list(bf = NA, properror = NA))
+      return(list(bf = NA, properror = NA, method = "quadrature"))
     }
     lbf = log(integral$value)
     prop.error = exp(log(integral$abs.error) - lbf)
-    return(list(bf = lbf + const, properror = prop.error))
+    return(list(bf = lbf + const, properror = prop.error, method = "quadrature"))
   }
 }
 
@@ -58,16 +58,16 @@ doNwaySampling<-function(method, y, X, rscale, iterations, gMap, incCont, progre
   if(ncol(X)==1) method="simple"
   
   if(method=="auto"){
-    simpSamples = try(jzs_sampler(testNsamples, y, X, rscale, gMap, incCont, NA, NA, FALSE, testCallback, 1, 0))
+    simpSamples = BFtry(jzs_sampler(testNsamples, y, X, rscale, gMap, incCont, NA, NA, FALSE, testCallback, 1, 0))
     simpleErr = propErrorEst(simpSamples)
     logAbsSimpErr = logMeanExpLogs(simpSamples) + log(simpleErr) 
      
     
-    apx = suppressWarnings(try(gaussianApproxAOV(y,X,rscale,gMap,incCont)))
+    apx = suppressWarnings(BFtry(gaussianApproxAOV(y,X,rscale,gMap,incCont)))
     if(inherits(apx,"try-error")){
       method="simple"
     }else{
-      impSamples = try(jzs_sampler(testNsamples, y, X, rscale, gMap, incCont, apx$mu, apx$sig, FALSE, testCallback, 1, 1))
+      impSamples = BFtry(jzs_sampler(testNsamples, y, X, rscale, gMap, incCont, apx$mu, apx$sig, FALSE, testCallback, 1, 1))
       if(inherits(impSamples, "try-error")){
         method="simple"
       }else{
@@ -87,11 +87,11 @@ doNwaySampling<-function(method, y, X, rscale, iterations, gMap, incCont, progre
   if(method=="importance"){
 
     if(is.null(apx) | inherits(apx,"try-error"))  
-      apx = try(gaussianApproxAOV(y,X,rscale,gMap,incCont))
+      apx = BFtry(gaussianApproxAOV(y,X,rscale,gMap,incCont))
     if(inherits(apx, "try-error")){
       method="simple"   
     }else{
-      goodSamples= try(jzs_sampler(iterations, y, X, rscale, gMap, incCont, apx$mu, apx$sig, progress, callback, 1, 1))
+      goodSamples= BFtry(jzs_sampler(iterations, y, X, rscale, gMap, incCont, apx$mu, apx$sig, progress, callback, 1, 1))
       if(inherits(goodSamples,"try-error")){
         method="simple"
         goodSamples = NULL
@@ -105,7 +105,7 @@ doNwaySampling<-function(method, y, X, rscale, iterations, gMap, incCont, progre
   }
   if(is.null(goodSamples)){  
     warning("Unknown sampling method requested (or sampling failed) for nWayAOV")
-    return(c(bf=NA,properror=NA))
+    return(list(bf=NA,properror=NA,method=NA))
   }
   
   if( any(is.na(goodSamples)) ) warning("Some NAs were removed from sampling results: ",sum(is.na(goodSamples))," in total.")
@@ -120,7 +120,7 @@ doNwaySampling<-function(method, y, X, rscale, iterations, gMap, incCont, progre
   return(list(bf = bf, properror=properror, N = n2, method = method, sampled = TRUE, code = randomString(1)))
 }
 
-createRscales <- function(formula, data, dataTypes, rscaleFixed = NULL, rscaleRandom = NULL, rscaleCont = NULL){
+createRscales <- function(formula, data, dataTypes, rscaleFixed = NULL, rscaleRandom = NULL, rscaleCont = NULL, rscaleEffects = NULL){
   
   rscaleFixed = rpriorValues("allNways","fixed",rscaleFixed)
   rscaleRandom = rpriorValues("allNways","random",rscaleRandom)
@@ -134,15 +134,33 @@ createRscales <- function(formula, data, dataTypes, rscaleFixed = NULL, rscaleRa
   rscale = 1:nGs * NA
   rscaleTypes = rscale
   
-  if(nCont > 0) rscaleTypes[nGs] = "continuous"
+  if(nCont > 0){
+    rscaleTypes[nGs] = "continuous"
+    names(rscaleTypes)[nGs] = "continuous"
+  }
   if(nFac > 0){
     facTypes = types[types != "continuous"]
     rscaleTypes[1:nFac] = facTypes 
+    names(rscaleTypes)[1:nFac] = names(facTypes)
   }
+  
+  names(rscale) = names(rscaleTypes)
   
   rscale[rscaleTypes=="continuous"] = rscaleCont
   rscale[rscaleTypes=="fixed"] = rscaleFixed
   rscale[rscaleTypes=="random"] = rscaleRandom
+  
+  
+  if( any( names(rscaleEffects) %in% names(types)[types == "continuous"] ) ){
+    stop("Continuous prior settings set from rscaleEffects; use rscaleCont instead.")
+    #rscaleEffects = rscaleEffects[ !( names(rscaleEffects) %in% names(types)[types == "continuous"] ) ]
+  }
+
+  if(length(rscaleEffects)>0)
+    rscale[names(rscale) %in% names(rscaleEffects)] = rscaleEffects[names(rscale)[names(rscale) %in% names(rscaleEffects)]]
+  
+  rscale = mapply(rpriorValues,effectType=rscaleTypes,
+                  priorType=rscale,MoreArgs = list(modelType="allNways"))
   
   return(rscale)
 }
@@ -318,7 +336,7 @@ centerContinuousColumns <- function(data){
   return(data.frame(mycols))
 }
 
-nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom=NULL, rscaleCont=NULL, posterior=FALSE, columnFilter = NULL, unreduce=TRUE, ...){
+nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom=NULL, rscaleCont=NULL, rscaleEffects = NULL, posterior=FALSE, columnFilter = NULL, unreduce=TRUE, ...){
   
   checkFormula(formula, data, analysis = "lm")
   
@@ -330,7 +348,7 @@ nWayFormula <- function(formula, data, dataTypes, rscaleFixed=NULL, rscaleRandom
   # To be removed when sparse matrix support is complete
   X = as.matrix(X)
   
-  rscale = createRscales(formula, data, dataTypes, rscaleFixed, rscaleRandom, rscaleCont)
+  rscale = createRscales(formula, data, dataTypes, rscaleFixed, rscaleRandom, rscaleCont, rscaleEffects)
   gMap = createGMap(formula, data, dataTypes)
   
   if(any(dataTypes=="continuous")){

@@ -135,7 +135,7 @@ combineModels <- function(modelList, checkCodes = TRUE){
   
   bf = logAvgBF
   properror = sumPropErr
-  new.analysis = list(bf = bf, properror = properror, sampled = TRUE)
+  new.analysis = list(bf = bf, properror = properror, sampled = TRUE, method = "composite")
   
   all.codes = do.call("c",codes)
   
@@ -173,8 +173,12 @@ randomString <- function(x=1){
 }
 
 rpriorValues <- function(modelType,effectType=NULL,priorType=NULL){
-  if(length(priorType)>1 | is.numeric(priorType)){
+  if(length(priorType)==0){
+    return(NULL)
+  }else if(length(priorType)>1 | is.numeric(priorType)){
     return(priorType)
+  }else if( suppressWarnings( !is.na( as.numeric( priorType ) ) ) ){
+    return(as.numeric(priorType))
   }else if(length(priorType)==0){
     return(NULL)
   }
@@ -203,6 +207,7 @@ rpriorValues <- function(modelType,effectType=NULL,priorType=NULL){
                              nuisance=1,
                              ultrawide=1,
                              stop("Unknown prior type.")),
+             continuous = rpriorValues("regression",,priorType),
              stop("Unknown prior type.")
       )
     )
@@ -246,14 +251,18 @@ rpriorValues <- function(modelType,effectType=NULL,priorType=NULL){
 }
 
 
-dinvgamma = function (x, shape, scale = 1, log = FALSE) 
+dinvgamma = function (x, shape, scale = 1, log = FALSE, logx = FALSE) 
 {
     if (shape <= 0 | scale <= 0) {
         stop("Shape or scale parameter negative in dinvgamma().\n")
     }
     shape = rep(0, length(x)) + shape
     scale = rep(0, length(x)) + scale
-    log.density = mapply(dinvgamma1_Rcpp, x = x, a = shape, b = scale)
+    if(logx){
+      log.density = mapply(dinvgamma1_logx_Rcpp, x = x, a = shape, b = scale)
+    }else{
+      log.density = mapply(dinvgamma1_Rcpp, x = x, a = shape, b = scale)
+    }
     if(log){
       return(log.density) 
     }else{
@@ -365,4 +374,31 @@ sumWithPropErr <- function(x1,x2,err1,err2){
   
   propErr = exp(absSum - logSum)
   return(c(logSum,propErr))
+}
+
+BFtry <- function(expression, silent=FALSE) {
+
+  result <- base::try(expression, silent=silent)
+  
+  if (inherits(result, "try-error")) {
+  
+    message <- as.character(result)
+    split <- base::strsplit(as.character(message), " : ")[[1]]
+    error <- split[[length(split)]]
+
+    while (substr(error, 1, 1) == ' ' || substr(error, 1, 1) == '\n')  # trim front
+      error <- substring(error, 2)
+    
+    while (substring(error, nchar(error)) == ' ' || substring(error, nchar(error)) == '\n')  # trim back
+      error <- substr(error, 1, nchar(error)-1)
+    
+    if (error == "Operation cancelled by callback function.")
+      stop("Operation cancelled by callback function.")
+    
+    if (error == "Operation cancelled by interrupt.")
+      stop("Operation cancelled by interrupt.")
+    
+  }
+  
+  result
 }

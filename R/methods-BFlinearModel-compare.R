@@ -10,6 +10,8 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
     rscaleFixed = rpriorValues("allNways","fixed",numerator@prior$rscale[['fixed']])
     rscaleRandom = rpriorValues("allNways","random",numerator@prior$rscale[['random']])
     rscaleCont = rpriorValues("regression",,numerator@prior$rscale[['continuous']])
+    rscaleEffects = numerator@prior$rscale[['effects']]
+    
     
     formula = formula(numerator@identifier$formula)
     checkFormula(formula, data, analysis = "lm")
@@ -27,26 +29,33 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
                     prior=list(),
                     dataTypes = dataTypes,
                     shortName = paste("Intercept only",sep=""),
-                    longName = paste("Intercept only", sep="")
+                    longName = paste("Intercept only", sep=""),
+                    analysis = list(method="trivial")
                   )
-    bf <- c(bf=NA, properror=NA)                 
-    try({
+    bf <- list(bf=NA, properror=NA, method=NA)                 
+    BFtry({
       if( nFactors == 0 ){
         numerator = denominator
-        bf = c(bf = 0, properror = 0)
+        bf = list(bf = 0, properror = 0, method = "trivial")
       }else if(all(relevantDataTypes == "continuous")){
         ## Regression
         reg = summary(lm(formula,data=data))
         R2 = reg[[8]]
         N = nrow(data)
         p = length(attr(terms(formula),"term.labels"))
+        if( any( names( rscaleEffects ) %in% attr(terms(formula),"term.labels")) ){
+          stop("Continuous prior settings set from rscaleEffects; use rscaleCont instead.")
+        }
         bf = linearReg.R2stat(N,p,R2,rscale=rscaleCont)
       }else if(all(relevantDataTypes != "continuous")){
         # ANOVA or t test
         freqs <- table(data[[factors[1]]])
         if(all(freqs==1)) stop("not enough observations")
         nLvls <- length(freqs)
-        rscale = ifelse(dataTypes[factors[1]] == "fixed", rscaleFixed, rscaleRandom)              
+        rscale = ifelse(dataTypes[factors[1]] == "fixed", rscaleFixed, rscaleRandom)
+        if(length(rscaleEffects)>0)
+          if(!is.na(rscaleEffects[factors[1]])) 
+            rscale = rscaleEffects[factors[1]]
         if( (nFactors==1) & (nLvls==2) ){
           # test
           # independent groups t
@@ -64,6 +73,7 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
                 dataTypes = dataTypes,
                 rscaleFixed = rscaleFixed,
                 rscaleRandom = rscaleRandom,
+                rscaleEffects = rscaleEffects,
                 posterior = FALSE, ...)
         }else{ # Nothing
           stop("Too few levels in independent variable: ",factors[1])
@@ -75,6 +85,7 @@ setMethod('compare', signature(numerator = "BFlinearModel", denominator = "missi
                        rscaleFixed = rscaleFixed,
                        rscaleRandom = rscaleRandom,
                        rscaleCont = rscaleCont,
+                       rscaleEffects = rscaleEffects,
                        posterior = FALSE, ...)
       }
     }) # End try expression

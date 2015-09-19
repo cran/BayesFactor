@@ -2,24 +2,26 @@
 BFprobability <- function(odds, normalize = 0){
   ## Add denominator 
   
-  ## eliminate redundant models
-  if( length(odds) > 1 ){
-    odds = c( odds, (1/odds[1]) / (1/odds[1]) )
-    duplicates = 1:length(odds)
-    for(i in 2:length(odds)){
-      for(j in 1:(i-1)){
-        if( odds@numerator[[i]] %same% odds@numerator[[j]] ){
-          duplicates[i] = j
-          break
+  if(options()$BFcheckProbabilityList){
+    ## eliminate redundant models
+    if( length(odds) > 1 ){
+      odds = c( odds, (1/odds[1]) / (1/odds[1]) )
+      duplicates = 1:length(odds)
+      for(i in 2:length(odds)){
+        for(j in 1:(i-1)){
+          if( odds@numerator[[i]] %same% odds@numerator[[j]] ){
+            duplicates[i] = j
+            break
+          }
         }
       }
-    }
-    which.denom = duplicates[length(odds)]
-    not.duplicate = duplicates == (1:length(odds))
-    not.duplicate[ which.denom ] = FALSE
+      which.denom = duplicates[length(odds)]
+      not.duplicate = duplicates == (1:length(odds))
+      not.duplicate[ which.denom ] = FALSE
     
-    # get rid of redundant models (this could be done better)  
-    odds = odds[not.duplicate]
+      # get rid of redundant models (this could be done better)  
+      odds = odds[not.duplicate]
+    }
   }
   new("BFprobability", odds = odds, 
       normalize = normalize,
@@ -35,13 +37,15 @@ setValidity("BFprobability", function(object){
   odds = object@odds
   ## Add denominator 
   
-  if( length(odds) > 1 ){
-    odds = c( odds, (1/odds[1]) / (1/odds[1]) )  
-    duplicates = 1:length(odds)
-    for(i in 2:length(odds)){
-      for(j in 1:(i-1)){
-        if( odds@numerator[[i]] %same% odds@numerator[[j]] ){
-          return("Duplicate models not allowed in probability objects.")
+  if(options()$BFcheckProbabilityList){
+    if( length(odds) > 1 ){
+      odds = c( odds, (1/odds[1]) / (1/odds[1]) )  
+      duplicates = 1:length(odds)
+      for(i in 2:length(odds)){
+        for(j in 1:(i-1)){
+          if( odds@numerator[[i]] %same% odds@numerator[[j]] ){
+            return("Duplicate models not allowed in probability objects.")
+          }
         }
       }
     }
@@ -142,6 +146,13 @@ setMethod("[", signature(x = "BFprobability", i = "index", j = "missing",
                          drop = "missing"),
           function (x, i, j, ..., drop) {
             if((na <- nargs()) == 2){
+              if(is.logical(i)){
+                if(any(i)){
+                  i = (1:length(i))[i]
+                }else{
+                  return(NULL)
+                }
+              }
               i = unique(i)
               norm = x@normalize
               logprobs = extractProbabilities(x, logprobs = TRUE)[i, ,drop=FALSE]
@@ -161,6 +172,23 @@ setMethod("[", signature(x = "BFprobability", i = "index", j = "missing",
             }else stop("invalid nargs()= ",na)
             return(x)
           })
+
+#' @rdname BFprobability-class
+#' @name filterBF,BFprobability,character-method
+#' @param name regular expression to search name
+#' @param perl logical. Should perl-compatible regexps be used? See ?grepl for details.
+#' @param fixed logical. If TRUE, pattern is a string to be matched as is. See ?grepl for details.
+setMethod("filterBF", signature(x = "BFprobability", name = "character"),
+          function (x, name, perl, fixed, ...) {
+            my.names = names(x) 
+            matches = sapply(name, function(el){
+              grepl(el, my.names, fixed = fixed, perl = perl)
+            })
+            any.matches = apply(matches, 1, any)
+            x[any.matches]
+          }
+)
+            
 
 
 ######
@@ -246,4 +274,17 @@ as.vector.BFprobability <- function(x, mode = "any"){
   names(v) = names(x)
   return(v) 
 }
+
+sum.BFprobability <-
+  function(..., na.rm = FALSE)
+  {
+    if(na.rm) warning("na.rm argument not used for BFprobability objects.")
+    sapply(list(...), function(el){
+      if(is(el, "BFprobability")){
+        return(exp(el@normalize))
+      }else{
+        return(NA)
+      }
+    }, USE.NAMES = FALSE)
+  }
 

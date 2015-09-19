@@ -1,8 +1,8 @@
 Package: BayesFactor
 Type: Package
 Title: Computation of Bayes Factors for Common Designs
-Version: 0.9.11-1
-Date: 2015-3-20
+Version: 0.9.12-2
+Date: 2015-09-19
 Authors@R: c(person("Richard D.", "Morey", role = c("aut", "cre"), email =
     "richarddmorey@gmail.com"), person("Jeffrey N.", "Rouder", role = "aut",
     email = "rouderj@missouri.edu"), person("Tahira", "Jamil", role = "ctb",
@@ -13,20 +13,20 @@ Description: A suite of functions for computing
     linear regression.
 License: GPL-2
 VignetteBuilder: knitr
-Depends: R (>= 3.0.2), coda, methods, Matrix
+Depends: R (>= 3.0.2), coda, Matrix (>= 1.1-1)
 Imports: pbapply, mvtnorm, stringr, utils, graphics, gtools,
-        MatrixModels, Rcpp (>= 0.11.2)
+        MatrixModels, Rcpp (>= 0.11.2), methods
 Suggests: doMC, foreach, testthat, knitr, markdown, arm, lme4, xtable,
         languageR
 URL: http://bayesfactorpcl.r-forge.r-project.org/
 BugReports: https://github.com/richarddmorey/BayesFactor/issues
 LazyLoad: yes
-LinkingTo: Rcpp (>= 0.11.2), RcppEigen
-Packaged: 2015-03-20 14:54:47 UTC; richard
+LinkingTo: Rcpp (>= 0.11.2), RcppEigen (>= 0.3.2.2.0)
+NeedsCompilation: yes
+Packaged: 2015-09-19 10:57:22 UTC; richard
 Author: Richard D. Morey [aut, cre],
   Jeffrey N. Rouder [aut],
   Tahira Jamil [ctb]
 Maintainer: Richard D. Morey <richarddmorey@gmail.com>
-NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2015-03-20 20:57:32
+Date/Publication: 2015-09-19 19:50:23

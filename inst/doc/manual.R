@@ -504,3 +504,9 @@ par(mfrow=c(1,2))
 plot(as.vector(chainsThinned[1:1000,"shape-round"]),type="l",xlab="Iterations",ylab="parameter shape-round")
 acf(chainsThinned[,"shape-round"])
 
+## ----tidy=FALSE----------------------------------------------------------
+newprior.bf = anovaBF(RT ~ shape + color + shape:color + ID, data = puzzles,
+                           whichRandom = "ID",rscaleEffects = c( color = 1 ))
+
+newprior.bf
+
