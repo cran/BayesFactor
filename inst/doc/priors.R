@@ -4,6 +4,7 @@
 ## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
 options(markdown.HTML.stylesheet = 'extra/manual.css')
 library(knitr)
+opts_chunk$set(dpi = 200, out.width = "67%") 
 library(BayesFactor)
 options(BFprogress = FALSE)
 bfversion = BFInfo()

@@ -1,11 +1,11 @@
 useDynLib(BayesFactor)
 
-export(logMeanExpLogs, 
+export(logMeanExpLogs,
     logCumMeanExpLogs,
     BFInfo,
     ttest.tstat,
-    oneWayAOV.Fstat, 
-    linearReg.R2stat, 
+    oneWayAOV.Fstat,
+    linearReg.R2stat,
     nWayAOV,
     ttestBF,
     lmBF,
@@ -22,7 +22,8 @@ export(logMeanExpLogs,
     logSummaryStats,
     newPriorOdds,
     "priorOdds<-",
-    "priorLogodds<-")
+    "priorLogodds<-",
+    correlationBF)
 
 importFrom(methods, show)
 importFrom(utils, head)
@@ -40,10 +41,10 @@ importFrom("methods", ".hasSlot", "S3Part", "S3Part<-", "as", "is",
             "new", "slot", "slot<-", "slotNames")
 importFrom("stats", "aov", "dbinom", "dnorm", "dt", "formula",
             "integrate", "lm", "nlm", "optim", "pcauchy", "plogis",
-            "pt", "qlogis", "rgamma", "sd", "t.test", "terms", "var")
+            "pt", "qlogis", "rgamma", "sd", "t.test", "terms", "var", "dlogis")
 importFrom("utils", "combn", "setTxtProgressBar", "txtProgressBar",
             "vignette")
-
+importFrom("stats", "cor", "dbeta", "pbeta", "pnorm")
 
 exportClasses("BFmodel", "BFBayesFactor","BFlinearModel", "BFodds")
 exportClasses("BFBayesFactorList", "BFoneSample","BFindepSample","BFcontingencyTable")

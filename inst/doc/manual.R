@@ -1,6 +1,7 @@
 ## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
 options(markdown.HTML.stylesheet = 'extra/manual.css')
 library(knitr)
+opts_chunk$set(dpi = 200, out.width = "67%") 
 options(digits=3)
 require(graphics)
 set.seed(2)
@@ -88,7 +89,7 @@ bf
 
 ## ----twosampletsamp,fig.width=10-----------------------------------------
 chains = posterior(bf, iterations = 10000)
-plot(chains[,1:4])
+plot(chains[,2])
 
 ## ----bemdata-------------------------------------------------------------
 ## Bem's t statistics from four selected experiments
@@ -352,6 +353,26 @@ allBFs / max(allBFs)
 
 ## ----GLMplot2,echo=FALSE,fig.width=10, fig.height=5----------------------
 plot(allBFs / max(allBFs))
+
+## ------------------------------------------------------------------------
+plot(Sepal.Width ~ Sepal.Length, data = iris)
+abline(lm(Sepal.Width ~ Sepal.Length, data = iris), col = "red")
+
+## ------------------------------------------------------------------------
+cor.test(y = iris$Sepal.Length, x = iris$Sepal.Width)
+
+## ------------------------------------------------------------------------
+bf = correlationBF(y = iris$Sepal.Length, x = iris$Sepal.Width)
+bf
+
+## ------------------------------------------------------------------------
+samples = posterior(bf, iterations = 10000)
+
+## ------------------------------------------------------------------------
+summary(samples)
+
+## ------------------------------------------------------------------------
+plot(samples[,"rho"])
 
 ## ----propprior,echo=FALSE,fig.width=10, fig.height=5---------------------
 p0 = .5

@@ -9,6 +9,7 @@ rversion = paste(session$version.string," on ",session$platform,sep="")
 
 options(markdown.HTML.stylesheet = 'extra/manual.css')
 library(knitr)
+opts_chunk$set(dpi = 200, out.width = "67%") 
 options(digits=3)
 require(graphics)
 set.seed(2)
