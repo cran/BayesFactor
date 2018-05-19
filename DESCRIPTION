@@ -1,8 +1,8 @@
 Package: BayesFactor
 Type: Package
 Title: Computation of Bayes Factors for Common Designs
-Version: 0.9.12-4.1
-Date: 2018-05-08
+Version: 0.9.12-4.2
+Date: 2018-05-09
 Authors@R: c(person("Richard D.", "Morey", role = c("aut", "cre", "cph"), email = "richarddmorey@gmail.com"), 
     person("Jeffrey N.", "Rouder", role = "aut", email = "jrouder@uci.edu"), 
     person("Tahira", "Jamil", role = c("ctb","cph"), email = "tahjamil@gmail.com"), 
@@ -26,7 +26,7 @@ LazyLoad: yes
 LinkingTo: Rcpp (>= 0.11.2), RcppEigen (>= 0.3.2.2.0)
 RoxygenNote: 6.0.1
 NeedsCompilation: yes
-Packaged: 2018-05-08 10:22:00 UTC; richard
+Packaged: 2018-05-19 07:25:56 UTC; richard
 Author: Richard D. Morey [aut, cre, cph],
   Jeffrey N. Rouder [aut],
   Tahira Jamil [ctb, cph],
@@ -35,4 +35,4 @@ Author: Richard D. Morey [aut, cre, cph],
   Alexander Ly [ctb, cph]
 Maintainer: Richard D. Morey <richarddmorey@gmail.com>
 Repository: CRAN
-Date/Publication: 2018-05-08 11:28:10 UTC
+Date/Publication: 2018-05-19 14:58:52 UTC

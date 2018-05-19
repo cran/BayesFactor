@@ -341,14 +341,14 @@ t.la = system.time(bfs.la &lt;- anovaBF(y ~ A*B*C + ID, data = effects,
 </code></pre>
 
 <pre><code>##    user  system elapsed 
-##   9.090   0.157   9.865
+##   8.700   0.106   9.084
 </code></pre>
 
 <pre><code class="r">t.la
 </code></pre>
 
 <pre><code>##    user  system elapsed 
-##   4.601   0.053   4.796
+##   4.440   0.044   4.550
 </code></pre>
 
 <pre><code class="r">plot(log(extractBF(sort(bfs.is))$bf),log(extractBF(sort(bfs.la))$bf),
@@ -516,7 +516,7 @@ bfEff &lt;- colMeans(B5out[,1:10])
 
 <!-- html table generated in R 3.5.0 by xtable 1.8-2 package -->
 
-<!-- Tue May  8 11:21:26 2018 -->
+<!-- Sat May 19 08:25:28 2018 -->
 
 <table border=1>
 <tr> <th>  </th> <th> lmer fixed effects </th>  </tr>
@@ -563,7 +563,7 @@ sideBySide &lt;- data.frame(BayesFactor=bfEff,lmer=reparLmer)
 
 <!-- html table generated in R 3.5.0 by xtable 1.8-2 package -->
 
-<!-- Tue May  8 11:21:26 2018 -->
+<!-- Sat May 19 08:25:28 2018 -->
 
 <table border=1>
 <tr> <th>  </th> <th> BayesFactor </th> <th> lmer </th>  </tr>
@@ -593,7 +593,7 @@ abline(0,1, lty=2)
 
 <hr/>
 
-<p><em>This document was compiled with version 0.9.12-4.1 of BayesFactor (R version 3.5.0 (2018-04-23) on x86_64-apple-darwin15.6.0).</em></p>
+<p><em>This document was compiled with version 0.9.12-4.2 of BayesFactor (R version 3.5.0 (2018-04-23) on x86_64-apple-darwin15.6.0).</em></p>
 
 </body>
 
