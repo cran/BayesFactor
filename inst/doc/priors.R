@@ -1,7 +1,7 @@
-## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
+## ----echo=FALSE,message=FALSE,results='hide'----------------------------------
 
 
-## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
+## ----echo=FALSE,message=FALSE,results='hide'----------------------------------
 options(markdown.HTML.stylesheet = 'extra/manual.css')
 library(knitr)
 opts_chunk$set(dpi = 200, out.width = "67%") 
@@ -12,7 +12,7 @@ session = sessionInfo()[[1]]
 rversion = paste(session$version.string," on ",session$platform,sep="")
 set.seed(2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Create data
 x <- rnorm(20)
 x[1:10] = x[1:10] + .2
@@ -22,12 +22,12 @@ dat = data.frame(x=x,grp=grp)
 
 t.test(x ~ grp, data=dat)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 as.vector(ttestBF(formula = x ~ grp, data=dat))
 as.vector(anovaBF(x~grp, data=dat))
 as.vector(generalTestBF(x~grp, data=dat))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # create some data
 id = rnorm(10)
 eff = c(-1,1)*1
@@ -39,11 +39,11 @@ idOnly = lmBF(x~id, data=dat, whichRandom="id")
 summary(aov(x~grp+Error(id/grp),data=dat))
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 as.vector(lmBF(x ~ grp+id, data=dat, whichRandom="id")/idOnly)
 as.vector(lmBF(x ~ forReg+id, data=dat, whichRandom="id")/idOnly)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # create some data
 tstat = 3
 NTwoSample = 500
@@ -64,11 +64,11 @@ x2 = x1 + effSize
 t.test(x2,x1)
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 log(as.vector(ttestBF(x0)))
 log(as.vector(ttestBF(x=x1,y=x2)))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # using the data previously defined
 t.test(x~grp,data=dat,paired=TRUE)
 

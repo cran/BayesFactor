@@ -4,8 +4,15 @@
 \alias{correlationBF}
 \title{Function for Bayesian analysis of correlations}
 \usage{
-correlationBF(y, x, rscale = "medium", nullInterval = NULL,
-  posterior = FALSE, callback = function(...) as.integer(0), ...)
+correlationBF(
+  y,
+  x,
+  rscale = "medium",
+  nullInterval = NULL,
+  posterior = FALSE,
+  callback = function(...) as.integer(0),
+  ...
+)
 }
 \arguments{
 \item{y}{first continuous variable}
@@ -66,7 +73,7 @@ plot(samples[,"rho"])
 \references{
 Ly, A., Verhagen, A. J. & Wagenmakers, E.-J. (2015).
 Harold Jeffreys's Default Bayes Factor Hypothesis Tests: Explanation, Extension, and Application in Psychology.
-Journal of Mathematical Psychology, Available online 28 August 2015, http://dx.doi.org/10.1016/j.jmp.2015.06.004.
+Journal of Mathematical Psychology, Available online 28 August 2015, https://dx.doi.org/10.1016/j.jmp.2015.06.004.
 
 Jeffreys, H. (1961). Theory of probability, 3rd edn. Oxford, UK: Oxford University Press.
 }

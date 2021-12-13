@@ -244,19 +244,18 @@ oneDesignMatrix <- function(trm, data, dataTypes, sparse = FALSE)
   checkEffects(effects, data, dataTypes)
 
   if(length(effects) == 1){
-
-    b64data <- data
-    colnames(b64data) <- toB64(colnames(b64data))
-    b64effects <- toB64(effects)
-
-    b64effect = paste("~",b64effects,"-1")
-
-    X = model.Matrix(formula(b64effect), data = b64data, sparse = sparse)
+    fmla = paste("~",composeTerm(effects),"-1")
+    X = model.Matrix(formula(fmla), data = data, sparse = sparse)
     if(dataTypes[effects] == "fixed"){
       X = X %*% fixedFromRandomProjection(ncol(X), sparse = sparse)
       colnames(X) = paste(effects,"_redu_",1:ncol(X),sep="")
-    } else {
-      colnames(X) = fromB64(colnames(X))
+    }else if(dataTypes[effects] == "random"){
+      # We need to add in a hyphen to be consistent with the
+      # column names elsewhere
+      colnames(X) =
+      stringr::str_replace(string = colnames(X),
+                           pattern = paste0("^",effects),
+                           replacement = paste0(effects,"-"))
     }
     return(X)
   }else{

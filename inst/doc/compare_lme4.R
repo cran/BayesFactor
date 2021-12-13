@@ -1,4 +1,4 @@
-## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
+## ----echo=FALSE,message=FALSE,results='hide'----------------------------------
 library(BayesFactor)
 
 options(BFprogress = FALSE)
@@ -14,12 +14,12 @@ options(digits=3)
 require(graphics)
 set.seed(2)
 
-## ----message=FALSE,warning=FALSE-----------------------------------------
+## ----message=FALSE,warning=FALSE----------------------------------------------
 library(arm)
 library(lme4)
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Number of participants
 N <- 20
 sig2 <- 1
@@ -44,11 +44,11 @@ beta <- matrix(c(50,
                ncol=1)
 effects$y = rnorm(Xdata%*%beta,Xdata%*%beta,sqrt(sig2))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Typical repeated measures ANOVA
 summary(fullaov <- aov(y ~ A*B*C + Error(ID/(A*B*C)),data=effects))
 
-## ----fig.width=10,fig.height=4-------------------------------------------
+## ----fig.width=10,fig.height=4------------------------------------------------
 mns <- tapply(effects$y,list(effects$A,effects$B,effects$C),mean)
 stderr = sqrt((sum(resid(fullaov[[3]])^2)/fullaov[[3]]$df.resid)/N)
 
@@ -60,7 +60,7 @@ for(i in 1:3){
   segments(1:3 + mns[,,i]*0,mns[,,i] + stderr,1:3 + mns[,,i]*0,mns[,,i] - stderr,col=rgb(0,0,0,.3))
 }
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 t.is = system.time(bfs.is <- anovaBF(y ~ A*B*C + ID, data = effects, 
                                      whichRandom="ID")
 )
@@ -69,7 +69,7 @@ t.la = system.time(bfs.la <- anovaBF(y ~ A*B*C + ID, data = effects,
                                      method = "laplace")
 )
 
-## ----fig.width=6,fig.height=6--------------------------------------------
+## ----fig.width=6,fig.height=6-------------------------------------------------
 t.is
 t.la
 
@@ -80,14 +80,14 @@ abline(0,1)
 
 bfs.is
 
-## ----message=FALSE-------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 chains <- lmBF(y ~ A + B + C + ID, data=effects, whichRandom = "ID", posterior=TRUE, iterations=10000)
 
 lmerObj <- lmer(y ~ A + B + C + (1|ID), data=effects)
 # Use arm function sim() to sample from posterior
 chainsLmer = sim(lmerObj,n.sims=10000)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 BF.sig2 <- chains[,colnames(chains)=="sig2"]
 AG.sig2 <- (chainsLmer@sigma)^2
 qqplot(log(BF.sig2),log(AG.sig2),pch=21,bg=rgb(0,0,1,.2),
@@ -95,14 +95,14 @@ qqplot(log(BF.sig2),log(AG.sig2),pch=21,bg=rgb(0,0,1,.2),
        ylab="arm samples",main="Posterior samples of\nerror variance")
 abline(0,1)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 AG.raneff <- chainsLmer@ranef$ID[,,1]
 BF.raneff <-  chains[,grep('ID-',colnames(chains),fixed='TRUE')]
 plot(colMeans(BF.raneff),colMeans(AG.raneff),pch=21,bg=rgb(0,0,1,.2),col="black",asp=TRUE,cex=1.2,xlab="BayesFactor estimate",ylab="arm estimate",main="Random effect posterior means")
 abline(0,1)
 
 
-## ----tidy=FALSE----------------------------------------------------------
+## ----tidy=FALSE---------------------------------------------------------------
 AG.fixeff <- chainsLmer@fixef
 BF.fixeff <-  chains[,1:10]
 
@@ -137,11 +137,11 @@ plot(sort(AGsd/BFsd),pch=21,bg=rgb(0,0,1,.2),col="black",cex=1.2,ylab="Ratio of 
 ## probably due to prior
 
 
-## ----message=FALSE,warning=FALSE-----------------------------------------
+## ----message=FALSE,warning=FALSE----------------------------------------------
 library(languageR)
 library(xtable)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(primingHeidPrevRT)
 
 primingHeidPrevRT$lRTmin1 <- log(primingHeidPrevRT$RTmin1)
@@ -153,13 +153,13 @@ lr4 <- lmer(RT ~ Condition + (1|Word)+ (1|Subject) + lRTmin1 + RTtoPrime + Respo
 INDOL <- which(scale(resid(lr4)) < 2.5)
 primHeidOL <- primingHeidPrevRT[INDOL,]
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Center continuous variables
 primHeidOL$BaseFrequency <- primHeidOL$BaseFrequency - mean(primHeidOL$BaseFrequency)
 primHeidOL$lRTmin1 <- primHeidOL$lRTmin1 - mean(primHeidOL$lRTmin1)
 primHeidOL$RTtoPrime <- primHeidOL$RTtoPrime - mean(primHeidOL$RTtoPrime)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # LMER
 lr4b <- lmer(  RT ~ Condition + ResponseToPrime +  (1|Word)+ (1|Subject) + lRTmin1 + RTtoPrime + ResponseToPrime*RTtoPrime + BaseFrequency , primHeidOL)
 # BayesFactor
@@ -168,10 +168,10 @@ B5out <- lmBF( RT ~ Condition + ResponseToPrime +     Word +    Subject  + lRTmi
 lmerEff <- fixef(lr4b)
 bfEff <- colMeans(B5out[,1:10])
 
-## ----results='asis'------------------------------------------------------
+## ----results='asis'-----------------------------------------------------------
 print(xtable(cbind("lmer fixed effects"=names(lmerEff))), type='html')
 
-## ----tidy=FALSE----------------------------------------------------------
+## ----tidy=FALSE---------------------------------------------------------------
 # Adjust lmer results from reference cell to sum to 0
 Z = c(1,   1/2, 1/2,    0,    0,    0,    0,
       0,  -1/2,   0,    0,    0,    0,    0,
@@ -192,10 +192,10 @@ reparLmer <- Z %*% matrix(lmerEff,ncol=1)
 # put results in data.frame for comparison
 sideBySide <- data.frame(BayesFactor=bfEff,lmer=reparLmer)
 
-## ----results='asis'------------------------------------------------------
+## ----results='asis'-----------------------------------------------------------
 print(xtable(sideBySide,digits=4), type='html')
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Notice Bayesian shrinkage
 par(cex=1.5)
 plot(sideBySide[-1,],pch=21,bg=rgb(0,0,1,.2),col="black",asp=TRUE,cex=1.2, main="fixed effects\n (excluding grand mean)")

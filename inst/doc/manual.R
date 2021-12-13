@@ -1,4 +1,4 @@
-## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
+## ----echo=FALSE,message=FALSE,results='hide'----------------------------------
 options(markdown.HTML.stylesheet = 'extra/manual.css')
 library(knitr)
 opts_chunk$set(dpi = 200, out.width = "67%") 
@@ -6,16 +6,16 @@ options(digits=3)
 require(graphics)
 set.seed(2)
 
-## ----message=FALSE-------------------------------------------------------
+## ----message=FALSE------------------------------------------------------------
 library(BayesFactor)
 
-## ----echo=FALSE,message=FALSE,results='hide'-----------------------------
+## ----echo=FALSE,message=FALSE,results='hide'----------------------------------
 options(BFprogress = FALSE)
 bfversion = BFInfo()
 session = sessionInfo()[[1]]
 rversion = paste(session$version.string," on ",session$platform,sep="")
 
-## ----onesampdata---------------------------------------------------------
+## ----onesampdata--------------------------------------------------------------
 data(sleep)
 
 ## Compute difference scores
@@ -24,50 +24,50 @@ diffScores = sleep$extra[1:10] - sleep$extra[11:20]
 ## Traditional two-tailed t test
 t.test(diffScores)
 
-## ----onesampt------------------------------------------------------------
+## ----onesampt-----------------------------------------------------------------
 bf = ttestBF(x = diffScores)
 ## Equivalently:
 ## bf = ttestBF(x = sleep$extra[1:10],y=sleep$extra[11:20], paired=TRUE)
 bf
 
-## ----recip---------------------------------------------------------------
+## ----recip--------------------------------------------------------------------
 1 / bf
 
-## ----tsamp---------------------------------------------------------------
+## ----tsamp--------------------------------------------------------------------
 chains = posterior(bf, iterations = 1000)
 summary(chains)
 
-## ----tsamplplot,fig.width=10---------------------------------------------
+## ----tsamplplot,fig.width=10--------------------------------------------------
 chains2 = recompute(chains, iterations = 10000)
 plot(chains2[,1:2])
 
-## ----onesamptinterval----------------------------------------------------
+## ----onesamptinterval---------------------------------------------------------
 bfInterval = ttestBF(x = diffScores, nullInterval=c(-Inf,0))
 bfInterval
 
-## ----onesampledivide-----------------------------------------------------
+## ----onesampledivide----------------------------------------------------------
 bfInterval[1] / bfInterval[2]
 
-## ----onesampcat----------------------------------------------------------
+## ----onesampcat---------------------------------------------------------------
 allbf = c(bf, bfInterval)
 allbf
 
-## ----plotonesamp,fig.width=10,fig.height=5-------------------------------
+## ----plotonesamp,fig.width=10,fig.height=5------------------------------------
 plot(allbf)
 
-## ----onesamplist---------------------------------------------------------
+## ----onesamplist--------------------------------------------------------------
 bfmat = allbf / allbf
 bfmat
 
-## ----onesamplist2--------------------------------------------------------
+## ----onesamplist2-------------------------------------------------------------
 bfmat[,2]
 bfmat[1,]
 
-## ----onesamplist3--------------------------------------------------------
+## ----onesamplist3-------------------------------------------------------------
 bfmat[,1:2]
 t(bfmat[,1:2])
 
-## ----twosampledata-------------------------------------------------------
+## ----twosampledata------------------------------------------------------------
 data(chickwts)
 
 ## Restrict to two groups
@@ -78,29 +78,29 @@ chickwts$feed = factor(chickwts$feed)
 ## Plot data
 plot(weight ~  feed, data = chickwts, main = "Chick weights")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ## traditional t test
 t.test(weight ~ feed, data = chickwts, var.eq=TRUE)
 
-## ----twosamplet----------------------------------------------------------
+## ----twosamplet---------------------------------------------------------------
 ## Compute Bayes factor
 bf = ttestBF(formula = weight ~ feed, data = chickwts)
 bf
 
-## ----twosampletsamp,fig.width=10-----------------------------------------
+## ----twosampletsamp,fig.width=10----------------------------------------------
 chains = posterior(bf, iterations = 10000)
 plot(chains[,2])
 
-## ----bemdata-------------------------------------------------------------
+## ----bemdata------------------------------------------------------------------
 ## Bem's t statistics from four selected experiments
 t = c(-.15, 2.39, 2.42, 2.43)
 N = c(100, 150, 97, 99)
 
-## ----bemanalysis1--------------------------------------------------------
+## ----bemanalysis1-------------------------------------------------------------
 bf = meta.ttestBF(t=t, n1=N, nullInterval=c(0,Inf), rscale=1)
 bf
 
-## ----bemposterior,fig.width=10-------------------------------------------
+## ----bemposterior,fig.width=10------------------------------------------------
 ## Do analysis again, without nullInterval restriction
 bf = meta.ttestBF(t=t, n1=N, rscale=1)
 
@@ -108,7 +108,7 @@ bf = meta.ttestBF(t=t, n1=N, rscale=1)
 chains = posterior(bf, iterations = 10000)
 plot(chains)
 
-## ----fixeddata,fig.width=10,fig.height=5---------------------------------
+## ----fixeddata,fig.width=10,fig.height=5--------------------------------------
 data(ToothGrowth)
 
 ## Example plot from ?ToothGrowth
@@ -122,41 +122,41 @@ levels(ToothGrowth$dose) = c("Low", "Medium", "High")
 
 summary(aov(len ~ supp*dose, data=ToothGrowth))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf = anovaBF(len ~ supp*dose, data=ToothGrowth)
 bf
 
-## ----fixedbf,fig.width=10,fig.height=5-----------------------------------
+## ----fixedbf,fig.width=10,fig.height=5----------------------------------------
 plot(bf[3:4] / bf[2])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf = anovaBF(len ~ supp*dose, data=ToothGrowth, whichModels="top")
 bf
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bfMainEffects = lmBF(len ~ supp + dose, data = ToothGrowth)
 bfInteraction = lmBF(len ~ supp + dose + supp:dose, data = ToothGrowth)
 ## Compare the two models
 bf = bfInteraction / bfMainEffects
 bf
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 newbf = recompute(bf, iterations = 500000)
 newbf
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ## Sample from the posterior of the full model
 chains = posterior(bfInteraction, iterations = 10000)
 ## 1:13 are the only "interesting" parameters
 summary(chains[,1:13])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(chains[,4:6])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(puzzles)
 
-## ----puzzlesplot,fig.width=7,fig.height=5,echo=FALSE---------------------
+## ----puzzlesplot,fig.width=7,fig.height=5,echo=FALSE--------------------------
 ## plot the data
 aovObj = aov(RT ~ shape*color + Error(ID/(shape*color)), data=puzzles)
 
@@ -168,46 +168,46 @@ points(1:4,mns,pch=22,col="red",bg=rgb(1,0,0,.6),cex=2)
 stderr = sqrt(sum(aovObj[[5]]$residuals^2)/11)/sqrt(12)
 segments(1:4,mns + stderr,1:4,mns - stderr,col="red")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summary(aov(RT ~ shape*color + Error(ID/(shape*color)), data=puzzles))
 
-## ----tidy=FALSE----------------------------------------------------------
+## ----tidy=FALSE---------------------------------------------------------------
 bf = anovaBF(RT ~ shape*color + ID, data = puzzles, 
              whichRandom="ID")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf
 
-## ----testplot,fig.width=10,fig.height=5----------------------------------
+## ----testplot,fig.width=10,fig.height=5---------------------------------------
 plot(bf)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bfWithoutID = lmBF(RT ~ shape*color, data = puzzles)
 bfWithoutID
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bfOnlyID = lmBF(RT ~ ID, whichRandom="ID",data = puzzles)
 bf2 = bfWithoutID / bfOnlyID
 bf2
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bfall = c(bf,bf2)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf[4] / bf2
 
-## ----regressData---------------------------------------------------------
+## ----regressData--------------------------------------------------------------
 data(attitude)
 
 ## Traditional multiple regression analysis
 lmObj = lm(rating ~ ., data = attitude)
 summary(lmObj)
 
-## ----regressAll----------------------------------------------------------
+## ----regressAll---------------------------------------------------------------
 bf = regressionBF(rating ~ ., data = attitude)
 length(bf)
 
-## ----regressSelect-------------------------------------------------------
+## ----regressSelect------------------------------------------------------------
 ## Choose a specific model
 bf["privileges + learning + raises + critical + advance"]
 ## Best 6 models
@@ -215,48 +215,48 @@ head(bf, n=6)
 ## Worst 4 models
 tail(bf, n=4)
 
-## ----regressSelectwhichmax,eval=FALSE------------------------------------
+## ----regressSelectwhichmax,eval=FALSE-----------------------------------------
 #  ## which model index is the best?
 #  which.max(bf)
 
-## ----regressSelectwhichmaxFake,echo=FALSE--------------------------------
+## ----regressSelectwhichmaxFake,echo=FALSE-------------------------------------
 ## which model index is the best?
 BayesFactor::which.max(bf)
 
-## ----regressSelect2------------------------------------------------------
+## ----regressSelect2-----------------------------------------------------------
 
 ## Compare the 5 best models to the best
 bf2 = head(bf) / max(bf)
 bf2
 plot(bf2)
 
-## ----regresstop, fig.width=10, fig.height=5------------------------------
+## ----regresstop, fig.width=10, fig.height=5-----------------------------------
 bf = regressionBF(rating ~ ., data = attitude, whichModels = "top")
 ## The seventh model is the most complex
 bf
 plot(bf)
 
-## ----regressbottom, fig.width=10, fig.height=5---------------------------
+## ----regressbottom, fig.width=10, fig.height=5--------------------------------
 bf = regressionBF(rating ~ ., data = attitude, whichModels = "bottom")
 plot(bf)
 
-## ----lmregress1----------------------------------------------------------
+## ----lmregress1---------------------------------------------------------------
 complaintsOnlyBf = lmBF(rating ~ complaints, data = attitude) 
 complaintsLearningBf = lmBF(rating ~ complaints + learning, data = attitude) 
 ## Compare the two models
 complaintsOnlyBf / complaintsLearningBf
 
-## ----lmposterior---------------------------------------------------------
+## ----lmposterior--------------------------------------------------------------
 chains = posterior(complaintsLearningBf, iterations = 10000)
 summary(chains)
 
-## ----lmregressclassical--------------------------------------------------
+## ----lmregressclassical-------------------------------------------------------
 summary(lm(rating ~ complaints + learning, data = attitude))
 
-## ----echo=FALSE,results='hide'-------------------------------------------
+## ----echo=FALSE,results='hide'------------------------------------------------
 rm(ToothGrowth)
 
-## ----GLMdata-------------------------------------------------------------
+## ----GLMdata------------------------------------------------------------------
 data(ToothGrowth)
 
 # model log2 of dose instead of dose directly
@@ -266,7 +266,7 @@ ToothGrowth$dose = log2(ToothGrowth$dose)
 lmToothGrowth <- lm(len ~ supp + dose + supp:dose, data=ToothGrowth)
 summary(lmToothGrowth)
 
-## ----GLMs----------------------------------------------------------------
+## ----GLMs---------------------------------------------------------------------
 full <- lmBF(len ~ supp + dose + supp:dose, data=ToothGrowth)
 noInteraction <- lmBF(len ~ supp + dose, data=ToothGrowth)
 onlyDose <- lmBF(len ~ dose, data=ToothGrowth)
@@ -275,19 +275,19 @@ onlySupp <- lmBF(len ~ supp, data=ToothGrowth)
 allBFs <- c(full, noInteraction, onlyDose, onlySupp)
 allBFs
 
-## ----GLMs2---------------------------------------------------------------
+## ----GLMs2--------------------------------------------------------------------
 full / noInteraction
 
-## ----GLMposterior1-------------------------------------------------------
+## ----GLMposterior1------------------------------------------------------------
 chainsFull <- posterior(full, iterations = 10000)
 
 # summary of the "interesting" parameters
 summary(chainsFull[,1:7])
 
-## ----GLMposterior2,results='hide',echo=FALSE-----------------------------
+## ----GLMposterior2,results='hide',echo=FALSE----------------------------------
 chainsNoInt <- posterior(noInteraction, iterations = 10000)
 
-## ----GLMplot,echo=FALSE,fig.width=10, fig.height=5-----------------------
+## ----GLMplot,echo=FALSE,fig.width=10, fig.height=5----------------------------
 ToothGrowth$dose <- ToothGrowth$dose - mean(ToothGrowth$dose)
 
 cmeans <- colMeans(chainsFull)[1:6]
@@ -327,22 +327,22 @@ axis(1,at=-1:1,lab=2^(-1:1))
 
 mtext("No interaction",3,.1,adj=1,cex=1.3)
 
-## ----eval=FALSE----------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  chainsNoInt <- posterior(noInteraction, iterations = 10000)
 #  
 #  # summary of the "interesting" parameters
 #  summary(chainsNoInt[,1:5])
 
-## ----echo=FALSE----------------------------------------------------------
+## ----echo=FALSE---------------------------------------------------------------
 summary(chainsNoInt[,1:5])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ToothGrowth$doseAsFactor <- factor(ToothGrowth$dose)
 levels(ToothGrowth$doseAsFactor) <- c(.5,1,2)
 
 aovBFs <- anovaBF(len ~ doseAsFactor + supp + doseAsFactor:supp, data = ToothGrowth)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 allBFs <- c(aovBFs, full, noInteraction, onlyDose)
 
 ## eliminate the supp-only model, since it performs so badly
@@ -351,30 +351,30 @@ allBFs <- allBFs[-1]
 ## Compare to best model
 allBFs / max(allBFs)
 
-## ----GLMplot2,echo=FALSE,fig.width=10, fig.height=5----------------------
+## ----GLMplot2,echo=FALSE,fig.width=10, fig.height=5---------------------------
 plot(allBFs / max(allBFs))
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(Sepal.Width ~ Sepal.Length, data = iris)
 abline(lm(Sepal.Width ~ Sepal.Length, data = iris), col = "red")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 cor.test(y = iris$Sepal.Length, x = iris$Sepal.Width)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf = correlationBF(y = iris$Sepal.Length, x = iris$Sepal.Width)
 bf
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 samples = posterior(bf, iterations = 10000)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 summary(samples)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 plot(samples[,"rho"])
 
-## ----propprior,echo=FALSE,fig.width=10, fig.height=5---------------------
+## ----propprior,echo=FALSE,fig.width=10, fig.height=5--------------------------
 p0 = .5
 rnames = c("medium","wide","ultrawide")
 r = sapply(rnames,function(rname) BayesFactor:::rpriorValues("proptest",,rname))
@@ -396,73 +396,73 @@ mtext(expression(paste("True probability ", pi)),3,2,adj=.5)
 
 legend(-5,.5,legend = leg_names, col=c("black","red","blue"), lwd=2,lty=1)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf = proportionBF( 682, 682 + 243, p = 3/4)
 1 / bf
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 binom.test(682, 682 + 243, p = 3/4)
 
-## ----proppost,fig.width=10, fig.height=5---------------------------------
+## ----proppost,fig.width=10, fig.height=5--------------------------------------
 chains = posterior(bf, iterations = 10000)
 plot(chains[,"p"], main = "Posterior of true probability\nof 'giant' progeny")
 
-## ----results='asis', echo=FALSE------------------------------------------
+## ----results='asis', echo=FALSE-----------------------------------------------
 data(raceDolls)
 kable(raceDolls)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 bf = contingencyTableBF(raceDolls, sampleType = "indepMulti", fixedMargin = "cols")
 bf
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 chisq.test(raceDolls)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 chains = posterior(bf, iterations = 10000)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 sameRaceGivenWhite = chains[,"pi[1,1]"] / chains[,"pi[*,1]"]
 sameRaceGivenBlack = chains[,"pi[1,2]"] / chains[,"pi[*,2]"]
 
 
-## ----ctablechains,fig.width=10, fig.height=5-----------------------------
+## ----ctablechains,fig.width=10, fig.height=5----------------------------------
 plot(mcmc(sameRaceGivenWhite - sameRaceGivenBlack), main = "Increase in probability of child picking\nsame race doll (white - black)")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(puzzles)
 
 puzzleGenBF <- generalTestBF(RT ~ shape + color + shape:color + ID, data=puzzles, whichRandom="ID")
 
 puzzleGenBF
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 puzzleGenBF <- generalTestBF(RT ~ shape + color + shape:color + ID, data=puzzles, whichRandom="ID", neverExclude="ID")
 
 puzzleGenBF
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 puzzleGenBF <- generalTestBF(RT ~ shape + color + shape:color + shape:ID + ID, data=puzzles, whichRandom="ID", neverExclude="ID")
 
 puzzleGenBF
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 puzzleGenBF <- generalTestBF(RT ~ shape + color + shape:color + shape:ID + ID, data=puzzles, whichRandom="ID", neverExclude="^ID$")
 
 puzzleGenBF
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 puzzleCullBF <- generalTestBF(RT ~ shape + color + shape:color + ID, data=puzzles, whichRandom="ID", noSample=TRUE,whichModels='all')
 
 puzzleCullBF
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 missing = puzzleCullBF[ is.na(puzzleCullBF) ]
 done = puzzleCullBF[ !is.na(puzzleCullBF) ]
 
 missing
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # get the names of the numerator models
 missingModels = names(missing)$numerator
 
@@ -479,7 +479,7 @@ missingOfInterest = missing[containsOnlyOne]
 
 missingOfInterest
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # recompute the Bayes factors for the missing models of interest
 sampledBayesFactors = recompute(missingOfInterest)
 
@@ -490,7 +490,7 @@ completeBayesFactors = c(done, sampledBayesFactors)
 
 completeBayesFactors
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data(puzzles)
 
 # Get MCMC chains corresponding to "full" model
@@ -500,32 +500,32 @@ fullModel = lmBF(RT ~ shape + color + shape:color + ID, data = puzzles, noSample
 
 fullModel
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 fullModelFiltered = lmBF(RT ~ shape + color + shape:color + ID, data = puzzles, noSample=TRUE, posterior = TRUE, iterations=3,columnFilter="ID")
 
 fullModelFiltered
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # Sample 10000 iterations, eliminating ID columns
 chains = lmBF(RT ~ shape + color + shape:color + ID, data = puzzles, posterior = TRUE, iterations=10000,columnFilter="ID")
 
-## ----acfplot,fig.width=10,fig.height=5,echo=FALSE------------------------
+## ----acfplot,fig.width=10,fig.height=5,echo=FALSE-----------------------------
 par(mfrow=c(1,2))
 plot(as.vector(chains[1:1000,"shape-round"]),type="l",xlab="Iterations",ylab="parameter shape-round")
 acf(chains[,"shape-round"])
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 chainsThinned = recompute(chains, iterations=20000, thin=2)
 
 # check size of MCMC chain
 dim(chainsThinned)
 
-## ----acfplot2,fig.width=10,fig.height=5,echo=FALSE-----------------------
+## ----acfplot2,fig.width=10,fig.height=5,echo=FALSE----------------------------
 par(mfrow=c(1,2))
 plot(as.vector(chainsThinned[1:1000,"shape-round"]),type="l",xlab="Iterations",ylab="parameter shape-round")
 acf(chainsThinned[,"shape-round"])
 
-## ----tidy=FALSE----------------------------------------------------------
+## ----tidy=FALSE---------------------------------------------------------------
 newprior.bf = anovaBF(RT ~ shape + color + shape:color + ID, data = puzzles,
                            whichRandom = "ID",rscaleEffects = c( color = 1 ))
 
