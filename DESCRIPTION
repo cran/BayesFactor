@@ -1,8 +1,8 @@
 Package: BayesFactor
 Type: Package
 Title: Computation of Bayes Factors for Common Designs
-Version: 0.9.12-4.3
-Date: 2021-12-10
+Version: 0.9.12-4.4
+Date: 2022-07-04
 Authors@R: c(person("Richard D.", "Morey", role = c("aut", "cre", "cph"), email = "richarddmorey@gmail.com"), 
     person("Jeffrey N.", "Rouder", role = "aut", email = "jrouder@uci.edu"), 
     person("Tahira", "Jamil", role = c("ctb","cph"), email = "tahjamil@gmail.com"), 
@@ -16,17 +16,18 @@ Description: A suite of functions for computing
 License: GPL-2
 VignetteBuilder: knitr
 Depends: R (>= 3.2.0), coda, Matrix (>= 1.1-1)
-Imports: pbapply, mvtnorm, stringr, utils, graphics, gtools,
-        MatrixModels, Rcpp (>= 0.11.2), methods, hypergeo
+Imports: pbapply, mvtnorm, stringr, utils, graphics, MatrixModels, Rcpp
+        (>= 0.11.2), methods, hypergeo
 Suggests: doMC, foreach, testthat, knitr, markdown, arm, lme4, xtable,
         languageR
 URL: https://richarddmorey.github.io/BayesFactor/
 BugReports: https://github.com/richarddmorey/BayesFactor/issues
 LazyLoad: yes
 LinkingTo: Rcpp (>= 0.11.2), RcppEigen (>= 0.3.2.2.0)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
+Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2021-12-12 10:42:36 UTC; richard
+Packaged: 2022-07-04 16:24:05 UTC; richa
 Author: Richard D. Morey [aut, cre, cph],
   Jeffrey N. Rouder [aut],
   Tahira Jamil [ctb, cph],
@@ -35,4 +36,4 @@ Author: Richard D. Morey [aut, cre, cph],
   Alexander Ly [ctb, cph]
 Maintainer: Richard D. Morey <richarddmorey@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-12-13 09:30:13 UTC
+Date/Publication: 2022-07-05 14:20:23 UTC
