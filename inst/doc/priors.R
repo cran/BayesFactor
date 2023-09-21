@@ -70,7 +70,7 @@ log(as.vector(ttestBF(x=x1,y=x2)))
 
 ## -----------------------------------------------------------------------------
 # using the data previously defined
-t.test(x~grp,data=dat,paired=TRUE)
+t.test(x=dat$x[dat$grp==1],y=dat$x[dat$grp==2],paired=TRUE)
 
 as.vector(lmBF(x ~ grp+id, data=dat, whichRandom="id")/idOnly)
 as.vector(ttestBF(x=dat$x[dat$grp==1],y=dat$x[dat$grp==2],paired=TRUE))

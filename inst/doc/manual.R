@@ -37,7 +37,7 @@ bf
 chains = posterior(bf, iterations = 1000)
 summary(chains)
 
-## ----tsamplplot,fig.width=10--------------------------------------------------
+## ----tsamplplot,fig.width=10,fig.cap=''---------------------------------------
 chains2 = recompute(chains, iterations = 10000)
 plot(chains2[,1:2])
 
@@ -52,7 +52,7 @@ bfInterval[1] / bfInterval[2]
 allbf = c(bf, bfInterval)
 allbf
 
-## ----plotonesamp,fig.width=10,fig.height=5------------------------------------
+## ----plotonesamp,fig.width=10,fig.height=5,fig.cap=''-------------------------
 plot(allbf)
 
 ## ----onesamplist--------------------------------------------------------------
@@ -87,7 +87,7 @@ t.test(weight ~ feed, data = chickwts, var.eq=TRUE)
 bf = ttestBF(formula = weight ~ feed, data = chickwts)
 bf
 
-## ----twosampletsamp,fig.width=10----------------------------------------------
+## ----twosampletsamp,fig.width=10,fig.cap=''-----------------------------------
 chains = posterior(bf, iterations = 10000)
 plot(chains[,2])
 
@@ -100,7 +100,7 @@ N = c(100, 150, 97, 99)
 bf = meta.ttestBF(t=t, n1=N, nullInterval=c(0,Inf), rscale=1)
 bf
 
-## ----bemposterior,fig.width=10------------------------------------------------
+## ----bemposterior,fig.width=10,fig.cap=''-------------------------------------
 ## Do analysis again, without nullInterval restriction
 bf = meta.ttestBF(t=t, n1=N, rscale=1)
 
@@ -108,7 +108,7 @@ bf = meta.ttestBF(t=t, n1=N, rscale=1)
 chains = posterior(bf, iterations = 10000)
 plot(chains)
 
-## ----fixeddata,fig.width=10,fig.height=5--------------------------------------
+## ----fixeddata,fig.width=10,fig.height=5,fig.cap=''---------------------------
 data(ToothGrowth)
 
 ## Example plot from ?ToothGrowth
@@ -126,7 +126,7 @@ summary(aov(len ~ supp*dose, data=ToothGrowth))
 bf = anovaBF(len ~ supp*dose, data=ToothGrowth)
 bf
 
-## ----fixedbf,fig.width=10,fig.height=5----------------------------------------
+## ----fixedbf,fig.width=10,fig.height=5,fig.cap=''-----------------------------
 plot(bf[3:4] / bf[2])
 
 ## -----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ plot(chains[,4:6])
 ## -----------------------------------------------------------------------------
 data(puzzles)
 
-## ----puzzlesplot,fig.width=7,fig.height=5,echo=FALSE--------------------------
+## ----puzzlesplot,fig.width=7,fig.height=5,echo=FALSE,fig.cap=''---------------
 ## plot the data
 aovObj = aov(RT ~ shape*color + Error(ID/(shape*color)), data=puzzles)
 
@@ -178,7 +178,7 @@ bf = anovaBF(RT ~ shape*color + ID, data = puzzles,
 ## -----------------------------------------------------------------------------
 bf
 
-## ----testplot,fig.width=10,fig.height=5---------------------------------------
+## ----testplot,fig.width=10,fig.height=5,fig.cap=''----------------------------
 plot(bf)
 
 ## -----------------------------------------------------------------------------
@@ -230,13 +230,13 @@ bf2 = head(bf) / max(bf)
 bf2
 plot(bf2)
 
-## ----regresstop, fig.width=10, fig.height=5-----------------------------------
+## ----regresstop, fig.width=10, fig.height=5,fig.cap=''------------------------
 bf = regressionBF(rating ~ ., data = attitude, whichModels = "top")
 ## The seventh model is the most complex
 bf
 plot(bf)
 
-## ----regressbottom, fig.width=10, fig.height=5--------------------------------
+## ----regressbottom, fig.width=10, fig.height=5,fig.cap=''---------------------
 bf = regressionBF(rating ~ ., data = attitude, whichModels = "bottom")
 plot(bf)
 
@@ -287,7 +287,7 @@ summary(chainsFull[,1:7])
 ## ----GLMposterior2,results='hide',echo=FALSE----------------------------------
 chainsNoInt <- posterior(noInteraction, iterations = 10000)
 
-## ----GLMplot,echo=FALSE,fig.width=10, fig.height=5----------------------------
+## ----GLMplot,echo=FALSE,fig.width=10, fig.height=5,fig.cap=''-----------------
 ToothGrowth$dose <- ToothGrowth$dose - mean(ToothGrowth$dose)
 
 cmeans <- colMeans(chainsFull)[1:6]
@@ -351,7 +351,7 @@ allBFs <- allBFs[-1]
 ## Compare to best model
 allBFs / max(allBFs)
 
-## ----GLMplot2,echo=FALSE,fig.width=10, fig.height=5---------------------------
+## ----GLMplot2,echo=FALSE,fig.width=10, fig.height=5,fig.cap=''----------------
 plot(allBFs / max(allBFs))
 
 ## -----------------------------------------------------------------------------
@@ -374,7 +374,7 @@ summary(samples)
 ## -----------------------------------------------------------------------------
 plot(samples[,"rho"])
 
-## ----propprior,echo=FALSE,fig.width=10, fig.height=5--------------------------
+## ----propprior,echo=FALSE,fig.width=10, fig.height=5,fig.cap=''---------------
 p0 = .5
 rnames = c("medium","wide","ultrawide")
 r = sapply(rnames,function(rname) BayesFactor:::rpriorValues("proptest",,rname))
@@ -403,7 +403,7 @@ bf = proportionBF( 682, 682 + 243, p = 3/4)
 ## -----------------------------------------------------------------------------
 binom.test(682, 682 + 243, p = 3/4)
 
-## ----proppost,fig.width=10, fig.height=5--------------------------------------
+## ----proppost,fig.width=10, fig.height=5,fig.cap=''---------------------------
 chains = posterior(bf, iterations = 10000)
 plot(chains[,"p"], main = "Posterior of true probability\nof 'giant' progeny")
 
@@ -426,7 +426,7 @@ sameRaceGivenWhite = chains[,"pi[1,1]"] / chains[,"pi[*,1]"]
 sameRaceGivenBlack = chains[,"pi[1,2]"] / chains[,"pi[*,2]"]
 
 
-## ----ctablechains,fig.width=10, fig.height=5----------------------------------
+## ----ctablechains,fig.width=10, fig.height=5,fig.cap=''-----------------------
 plot(mcmc(sameRaceGivenWhite - sameRaceGivenBlack), main = "Increase in probability of child picking\nsame race doll (white - black)")
 
 ## -----------------------------------------------------------------------------
@@ -509,7 +509,7 @@ fullModelFiltered
 # Sample 10000 iterations, eliminating ID columns
 chains = lmBF(RT ~ shape + color + shape:color + ID, data = puzzles, posterior = TRUE, iterations=10000,columnFilter="ID")
 
-## ----acfplot,fig.width=10,fig.height=5,echo=FALSE-----------------------------
+## ----acfplot,fig.width=10,fig.height=5,echo=FALSE,fig.cap=''------------------
 par(mfrow=c(1,2))
 plot(as.vector(chains[1:1000,"shape-round"]),type="l",xlab="Iterations",ylab="parameter shape-round")
 acf(chains[,"shape-round"])
@@ -520,7 +520,7 @@ chainsThinned = recompute(chains, iterations=20000, thin=2)
 # check size of MCMC chain
 dim(chainsThinned)
 
-## ----acfplot2,fig.width=10,fig.height=5,echo=FALSE----------------------------
+## ----acfplot2,fig.width=10,fig.height=5,echo=FALSE,fig.cap=''-----------------
 par(mfrow=c(1,2))
 plot(as.vector(chainsThinned[1:1000,"shape-round"]),type="l",xlab="Iterations",ylab="parameter shape-round")
 acf(chainsThinned[,"shape-round"])
