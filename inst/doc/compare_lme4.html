@@ -120,7 +120,7 @@ table, .body h2 { border-bottom: 1px solid #666; }
 .body .appendix, .appendix ~ h2 { border-bottom-style: dashed; }
 .footnote-ref a::before { content: "["; }
 .footnote-ref a::after { content: "]"; }
-.footnotes::before {
+section.footnotes::before {
   content: "";
   display: block;
   max-width: 20em;
@@ -264,12 +264,12 @@ t.la = system.time(bfs.la &lt;- anovaBF(y ~ A*B*C + ID, data = effects,
 <pre><code class="language-r">t.is
 </code></pre>
 <pre><code>##    user  system elapsed 
-##    4.40    0.02    4.84
+##    4.67    0.17    4.95
 </code></pre>
 <pre><code class="language-r">t.la
 </code></pre>
 <pre><code>##    user  system elapsed 
-##    2.28    0.00    2.47
+##    2.33    0.07    2.40
 </code></pre>
 <pre><code class="language-r">plot(log(extractBF(sort(bfs.is))$bf),log(extractBF(sort(bfs.la))$bf),
      xlab=&quot;Default Sampler&quot;,ylab=&quot;Laplace approximation&quot;,
@@ -421,7 +421,7 @@ bfEff &lt;- colMeans(B5out[,1:10])
 <pre><code class="language-r">print(xtable(cbind(&quot;lmer fixed effects&quot;=names(lmerEff))), type='html')
 </code></pre>
 <!-- html table generated in R 4.4.0 by xtable 1.8-4 package -->
-<!-- Thu Sep 21 16:41:19 2023 -->
+<!-- Thu Nov 30 18:56:35 2023 -->
 <table border=1>
 <tr> <th>  </th> <th> lmer fixed effects </th>  </tr>
   <tr> <td align="right"> 1 </td> <td> (Intercept) </td> </tr>
@@ -459,7 +459,7 @@ sideBySide &lt;- data.frame(BayesFactor=bfEff,lmer=reparLmer)
 <pre><code class="language-r">print(xtable(sideBySide,digits=4), type='html')
 </code></pre>
 <!-- html table generated in R 4.4.0 by xtable 1.8-4 package -->
-<!-- Thu Sep 21 16:41:19 2023 -->
+<!-- Thu Nov 30 18:56:35 2023 -->
 <table border=1>
 <tr> <th>  </th> <th> BayesFactor </th> <th> lmer </th>  </tr>
   <tr> <td align="right"> mu </td> <td align="right"> 6.6419 </td> <td align="right"> 6.6430 </td> </tr>
@@ -485,7 +485,7 @@ abline(0,1, lty=2)
 </div>
 <p>The results are quite close to one another, with a bit of Bayesian shrinkage.</p>
 <hr />
-<p><em>This document was compiled with version 0.9.12-4.5 of BayesFactor (R Under development (unstable) (2023-09-20 r85183 ucrt) on x86_64-w64-mingw32).</em></p>
+<p><em>This document was compiled with version 0.9.12-4.6 of BayesFactor (R Under development (unstable) (2023-11-27 r85642 ucrt) on x86_64-w64-mingw32).</em></p>
 </div>
 <div class="include-after">
 </div>
