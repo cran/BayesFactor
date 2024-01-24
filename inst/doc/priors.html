@@ -149,7 +149,7 @@ section.footnotes::before {
 </div>
 <div class="body">
 <!--
-%\VignetteEngine{knitr}
+%\VignetteEngine{knitr::knitr}
 %\VignetteIndexEntry{Prior checks}
 \usepackage[utf8]{inputenc}
 -->
@@ -278,7 +278,7 @@ t.test(x2,x1)
 ##  0.0656 0.3138
 ## sample estimates:
 ## mean of x mean of y 
-##  1.90e-01  4.98e-18
+##  1.90e-01  6.66e-18
 </code></pre>
 <p>These (log) Bayes factors should be approximately the same.</p>
 <pre><code class="language-r">log(as.vector(ttestBF(x0)))
@@ -320,7 +320,7 @@ t.test(x=dat$x[dat$grp==1],y=dat$x[dat$grp==2],paired=TRUE)
 ##          18.9
 </code></pre>
 <hr />
-<p><em>This document was compiled with version 0.9.12-4.6 of BayesFactor (R Under development (unstable) (2023-11-27 r85642 ucrt) on x86_64-w64-mingw32).</em></p>
+<p><em>This document was compiled with version 0.9.12-4.7 of BayesFactor (R version 4.3.2 (2023-10-31) on aarch64-apple-darwin20).</em></p>
 </div>
 <div class="include-after">
 </div>
